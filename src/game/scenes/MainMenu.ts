@@ -8,15 +8,17 @@ class MenuOption {
 
     constructor(
         scene: Scene, x: number, y: number, text: string | string[], 
-        style: object, inputEvents: Map<string, Function>
+        style: object, inputEvents: {
+            [key: string]: Function
+        }
     ) 
     {
         this.text = scene.add.text(x, y, text, style)
             .setOrigin(0.5).setDepth(100).setInteractive();
 
-        for(const [eventName, eventHandler] of inputEvents) {
-            this.text.on(eventName, eventHandler);
-        }
+        Object.entries(inputEvents).forEach(([name, handler]) => {
+            this.text.on(name, handler);
+        });
     }
 }
 
@@ -42,7 +44,7 @@ export class MainMenu extends Scene
             fontFamily: 'Arial Black', fontSize: 24, color: '#ffffff',
             stroke: '#000000', strokeThickness: 5,
             align: 'center'
-        }, new Map(Object.entries({
+        }, {
             "pointerdown": function (
                 _pointer: any, localX: number, 
                 localY: number, event: Event 
@@ -50,15 +52,15 @@ export class MainMenu extends Scene
             {
                 console.log(_pointer, localX, localY, event);
             }
-        })))
+        })
 
         const ContinueOption = new MenuOption(this, 512, 560, "Continue", {
             fontFamily: 'Arial Black', fontSize: 24, color: '#ffffff',
             stroke: '#000000', strokeThickness: 5,
             align: 'center'
-        }, new Map(Object.entries({
+        }, {
 
-        })))
+        })
 
         this.background = this.add.image(512, 384, 'background');
 
