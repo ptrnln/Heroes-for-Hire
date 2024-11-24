@@ -1,15 +1,19 @@
 import { GameObjects, Scene } from 'phaser';
+import { PhaserGame } from '../PhaserGame';
 
 import { EventBus } from '../EventBus';
 
 class MenuOption {
+    
+    index: number;
     text: GameObjects.Text;
     inputEvents: Map<string, Function>;
+    selected: boolean
 
     constructor(
         scene: Scene, x: number, y: number, text: string | string[], 
         style: object, inputEvents: {
-            [key: string]: Function
+            [key: string]:  Function
         }
     ) 
     {
@@ -45,16 +49,19 @@ export class MainMenu extends Scene
             stroke: '#000000', strokeThickness: 5,
             align: 'center'
         }, {
-            "pointerdown": function (
-                _pointer: any, localX: number, 
-                localY: number, event: Event 
-            ) 
-            {
+            "pointerdown": (
+                _pointer: any, localX: number,  localY: number, event: Event 
+            ) => {
                 console.log(_pointer, localX, localY, event);
+            },
+            "pointerover": (
+                _pointer: any, _localX: number, _localY: number, _event: Event
+            ) => {
+                
             }
         })
 
-        const ContinueOption = new MenuOption(this, 512, 560, "Continue", {
+        const continueOption = new MenuOption(this, 512, 560, "Continue", {
             fontFamily: 'Arial Black', fontSize: 24, color: '#ffffff',
             stroke: '#000000', strokeThickness: 5,
             align: 'center'
@@ -73,9 +80,18 @@ export class MainMenu extends Scene
         }).setOrigin(0.5).setDepth(100);
 
         this.options.push(newGameOption);
-        this.options.push(ContinueOption);
+        this.options.push(continueOption);
 
         EventBus.emit('current-scene-ready', this);
+    }
+
+    addOption (option: MenuOption): number
+    {
+        const idx: number = this.options.length;
+
+        this.options.push(option);
+
+        return idx
     }
     
     changeScene ()
