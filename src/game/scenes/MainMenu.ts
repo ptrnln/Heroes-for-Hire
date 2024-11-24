@@ -137,6 +137,5 @@ export class MainMenu extends Scene
                 }
             });
         }
-        
     }
 }
