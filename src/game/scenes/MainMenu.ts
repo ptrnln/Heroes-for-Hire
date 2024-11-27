@@ -1,30 +1,8 @@
 import { GameObjects, Scene } from 'phaser';
 import { PhaserGame } from '../PhaserGame';
+import { MenuOption } from '../types/MenuOption';
 
 import { EventBus } from '../EventBus';
-
-class MenuOption {
-    
-    index: number;
-    text: GameObjects.Text;
-    inputEvents: Map<string, Function>;
-    selected: boolean
-
-    constructor(
-        scene: Scene, x: number, y: number, text: string | string[], 
-        style: object, inputEvents: {
-            [key: string]:  Function
-        }
-    ) 
-    {
-        this.text = scene.add.text(x, y, text, style)
-            .setOrigin(0.5).setDepth(100).setInteractive();
-
-        Object.entries(inputEvents).forEach(([name, handler]) => {
-            this.text.on(name, handler);
-        });
-    }
-}
 
 export class MainMenu extends Scene
 {
@@ -34,8 +12,7 @@ export class MainMenu extends Scene
     options: MenuOption[];
     logoTween: Phaser.Tweens.Tween | null;
     
-
-    constructor ()
+    constructor()
     {
         super('MainMenu');
         this.options = [];
@@ -50,9 +27,9 @@ export class MainMenu extends Scene
             align: 'center'
         }, {
             "pointerdown": (
-                _pointer: any, localX: number,  localY: number, event: Event 
+                _pointer: any, _localX: number,  _localY: number, _event: Event 
             ) => {
-                console.log(_pointer, localX, localY, event);
+                this.changeScene('SaveMenu');
             },
             "pointerover": (
                 _pointer: any, _localX: number, _localY: number, _event: Event
@@ -85,16 +62,9 @@ export class MainMenu extends Scene
         EventBus.emit('current-scene-ready', this);
     }
 
-    addOption (option: MenuOption): number
-    {
-        const idx: number = this.options.length;
-
-        this.options.push(option);
-
-        return idx
-    }
     
-    changeScene ()
+    
+    changeScene(key: string = 'Game')
     {
         if (this.logoTween)
         {
@@ -102,7 +72,7 @@ export class MainMenu extends Scene
             this.logoTween = null;
         }
 
-        this.scene.start('Game');
+        this.scene.start(key);
     }
 
     moveLogo (vueCallback: ({ x, y }: { x: number, y: number }) => void)

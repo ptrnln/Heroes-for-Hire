@@ -2,6 +2,13 @@ import { useRef, useState } from 'react';
 import { IRefPhaserGame, PhaserGame } from './game/PhaserGame';
 import { MainMenu } from './game/scenes/MainMenu';
 
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_DATABASE_URL;
+const supabaseApiKey = import.meta.env.VITE_DATABASE_APIKEY;
+
+const supabase = createClient(supabaseUrl, supabaseApiKey);
+
 function App()
 {
     // The sprite can only be moved in the MainMenu Scene
