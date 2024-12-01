@@ -21,7 +21,10 @@ const config: Phaser.Types.Core.GameConfig = {
         MainGame,
         GameOver,
         SaveMenu
-    ]
+    ],
+    dom: {
+        createContainer: true
+    }
 };
 
 const StartGame = (parent: string) => {
