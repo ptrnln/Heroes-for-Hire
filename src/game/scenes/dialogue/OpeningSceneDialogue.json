@@ -1,0 +1,13 @@
+[
+    {
+        "speaker": "player",
+        "text": "This is it. %bp One more strike and it's all over."
+    },
+    {
+        "speaker": "bigbad",
+        "text": "Eurgh... %bp Heh... %bp heheh. %bp You naive child. %nd You will soon see the consequences of your actions. How I would delight in seeing the look upon your face when you realize. %nd Alas, I will not live to see the world you will create, I take no small comfort in that. %nd ... %nd Are you waiting for an apology? %bp You will ge- %p(1) grhkkh... %p(3) heurgh - %p(1) you will get none from... %p(1) from me. %nd Do what you must."
+    },
+    {
+        "transitionTarget": "battle"
+    }
+]

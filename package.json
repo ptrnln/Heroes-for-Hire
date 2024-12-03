@@ -27,10 +27,14 @@
         "build-nolog": "vite build --config vite/config.prod.mjs"
     },
     "dependencies": {
+        "@account-kit/infra": "^4.5.1",
+        "@account-kit/react": "^4.5.1",
         "@emotion/react": "^11.13.5",
         "@emotion/styled": "^11.13.5",
         "@mui/material": "^6.1.8",
         "@supabase/supabase-js": "^2.46.1",
+        "@tanstack/react-query": "^5.62.2",
+        "buffer": "^6.0.3",
         "dotenv": "^16.4.5",
         "phaser": "^3.87.0",
         "react": "^18.2.0",
@@ -43,11 +47,15 @@
         "@typescript-eslint/eslint-plugin": "^7.13.1",
         "@typescript-eslint/parser": "^7.13.1",
         "@vitejs/plugin-react": "^4.3.1",
+        "autoprefixer": "^10.4.20",
         "eslint": "^8.57.0",
         "eslint-plugin-react-hooks": "^4.6.2",
         "eslint-plugin-react-refresh": "^0.4.7",
+        "postcss": "^8.4.49",
+        "tailwindcss": "^3.4.15",
         "terser": "^5.28.1",
         "typescript": "^5.2.2",
-        "vite": "^5.3.1"
+        "vite": "^5.3.1",
+        "vite-plugin-node-polyfills": "^0.22.0"
     }
 }

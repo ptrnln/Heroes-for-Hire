@@ -1,6 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import dotenv from 'dotenv'
+import tailwindcss from "tailwindcss"
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
+
 
 dotenv.config({path:'../.env'});
 
@@ -8,9 +11,14 @@ dotenv.config({path:'../.env'});
 export default defineConfig({
     base: './',
     plugins: [
-        react(),
+        react(), nodePolyfills()
     ],
     server: {
         port: 8080
+    },
+    css: {
+        postcss: {
+            plugins:[tailwindcss()]
+        }
     }
 })

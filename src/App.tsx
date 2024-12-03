@@ -1,17 +1,19 @@
 import { useRef, useState } from 'react';
 import { IRefPhaserGame, PhaserGame } from './game/PhaserGame';
 import { MainMenu } from './game/scenes/MainMenu';
-import { Dialog } from "@mui/material";
-
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_DATABASE_URL;
-const supabaseApiKey = import.meta.env.VITE_DATABASE_APIKEY;
-
+import {
+    useAuthModal,
+    useLogout,
+    useSignerStatus,
+    useUser,
+} from "@account-kit/react";
 
 function App()
 {
-    const supabase = createClient(supabaseUrl, supabaseApiKey);
+    const user = useUser();
+    const { openAuthModal } = useAuthModal();
+    const signerStatus = useSignerStatus();
+    const { logout } = useLogout();
     // The sprite can only be moved in the MainMenu Scene
     const [canMoveSprite, setCanMoveSprite] = useState(true);
     const [loading, setLoading] = useState(true);
@@ -22,7 +24,7 @@ function App()
 
     const changeScene = () => {
         setLoading(true);
-        
+
         if(phaserRef.current)
         {     
             const scene = phaserRef.current.scene as MainMenu;
@@ -106,6 +108,23 @@ function App()
                 <div>
                     <button className="button" onClick={addSprite}>Add New Sprite</button>
                 </div>
+                {signerStatus.isInitializing ? (
+                    <>Loading...</>
+                ) : user ? (
+                    <div className="flex flex-col gap-2 p-2">
+                    <p className="text-xl font-bold">Success!</p>
+                    You're logged in as {user.email ?? "anon"}.<button
+                        className="akui-btn akui-btn-primary mt-6"
+                        onClick={() => logout()}
+                    >
+                        Log out
+                    </button>
+                    </div>
+                ) : (
+                    <button className="akui-btn akui-btn-primary" onClick={openAuthModal}>
+                    Login
+                    </button>
+                )}
             </div>
         </div>
     )

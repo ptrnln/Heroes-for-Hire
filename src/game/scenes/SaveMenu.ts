@@ -2,47 +2,49 @@ import { GameObjects, Scene } from "phaser";
 import { EventBus } from "../EventBus";
 import { MenuOption } from "../types/MenuOption";
 import supabase from "../../SupabaseClient";
-
+import './SaveMenu.css'
+import { SupabaseClient } from "@supabase/supabase-js";
 
 export class SaveMenu extends Scene {
     saves: any[]
+    list: HTMLUListElement
+    supabaseClient: SupabaseClient
 
     constructor() {
         super('SaveMenu');
 
-        this.saves = [];
-        
-    }
+        this.supabaseClient = supabase();
 
-    create() {
-        // const save1 = new MenuOption(this, 480, 520, "Save 1", {
-        //     fontFamily: 'Arial Black', fontSize: 24, color: '#ffffff',
-        //     stroke: '#000000', strokeThickness: 5,
-        //     align: 'center'
-        // }, {
-        //     "pointerdown": (_pointer: any, _localX: number, _localY: number, _event: Event) => {
-        //         this.changeScene();
-        //     }
-        // })
         try {
-            this.getSaves().finally(() => {
+            this.getSaves().then((data) => {
                 const ul = document.createElement('ul');
 
-                this.saves.forEach(save => {
-                    debugger
+                data.forEach((save, i) => {
                     const saveElement = document.createElement('li');
-                    const { text } = save.text
+                    const text = `Save-${++i}`
                     saveElement.innerText = text
+                    saveElement.className = 'pr-20px'
+                    saveElement.onpointerdown = (e) => {
+                        this.changeScene();
+                    }
                     ul.appendChild(saveElement);
-                })
-                const container = document.createElement('div');
-                container.appendChild(ul);
-                this.add.dom(0, 0, container);
-            });
+                });
+
+                this.list = ul;
+            })
         }
         catch(err) {
             console.error(err);
         }
+        
+    }
+
+    create() {
+       
+        const container = document.createElement('div');
+        container.appendChild(this.list);
+
+        this.add.dom(480, 480, container, 'background-color: #c4c4c4; cursor: pointer; user-select: none;');
 
         
         EventBus.emit('current-scene-ready', this);
@@ -53,22 +55,10 @@ export class SaveMenu extends Scene {
     }
 
     private async getSaves() {
-        const { data, error } = await supabase.from("game_saves").select();
+        const { data, error } = await this.supabaseClient.from("game_saves").select();
 
         if(error) throw error
 
-        data.forEach((_save, i) => {
-            this.saves.push(new MenuOption(this, 480, 520, `Save ${++i} - ${_save.created_at}`, 
-            {
-                fontFamily: 'Arial Black', fontSize: 24, color: '#ffffff',
-                stroke: '#000000', strokeThickness: 5,
-                align: 'center'
-            }, 
-            {
-                "pointerdown": (_pointer: any, _localX: number, _localY: number, _event: Event) => {
-                    this.changeScene();
-                }
-            }))
-        })
+        return data
     }
 }

@@ -29,12 +29,11 @@ export class MainMenu extends Scene
             "pointerdown": (
                 _pointer: any, _localX: number,  _localY: number, _event: Event 
             ) => {
-                this.changeScene('SaveMenu');
+
             },
             "pointerover": (
                 _pointer: any, _localX: number, _localY: number, _event: Event
             ) => {
-                
             }
         })
 
@@ -43,7 +42,11 @@ export class MainMenu extends Scene
             stroke: '#000000', strokeThickness: 5,
             align: 'center'
         }, {
-
+            "pointerdown": (
+                _pointer: any, _localX: number, _localY: number, _event: Event
+            ) => {
+                this.changeScene('SaveMenu');
+            }
         })
 
         this.background = this.add.image(512, 384, 'background');
