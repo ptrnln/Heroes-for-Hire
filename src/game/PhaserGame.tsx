@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useLayoutEffect, useRef } from 'react';
 import StartGame from './main';
 import { EventBus } from './EventBus';
+import { UseUserResult } from '@account-kit/react';
 
 export interface IRefPhaserGame
 {
@@ -11,9 +12,11 @@ export interface IRefPhaserGame
 interface IProps
 {
     currentActiveScene?: (scene_instance: Phaser.Scene) => void
+    openAuthModal?: () => void
+    user?: UseUserResult | null
 }
 
-export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame({ currentActiveScene }, ref)
+export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame({ currentActiveScene, openAuthModal, user }, ref)
 {
     const game = useRef<Phaser.Game | null>(null!);
 
@@ -27,6 +30,7 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
             if (typeof ref === 'function')
             {
                 ref({ game: game.current, scene: null });
+
             } else if (ref)
             {
                 ref.current = { game: game.current, scene: null };
@@ -72,6 +76,11 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
             EventBus.removeListener('current-scene-ready');
         }
     }, [currentActiveScene, ref]);
+
+    // useEffect(() => 
+    // {
+
+    // }, [openAuthModal])
 
     return (
         <div id="game-container"></div>

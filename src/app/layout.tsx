@@ -1,6 +1,5 @@
 import { config } from "../config";
-import { cookieToInitialState, parseCookie } from "@account-kit/core";
-import "./globals.css";
+import { cookieToInitialState } from "@account-kit/core";
 import { Providers } from "./providers";
  
 export default function RootLayout({
