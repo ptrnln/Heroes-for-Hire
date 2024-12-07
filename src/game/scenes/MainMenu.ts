@@ -1,8 +1,13 @@
 import { GameObjects, Scene } from 'phaser';
-import { PhaserGame } from '../PhaserGame';
 import { MenuOption } from '../types/MenuOption';
 
 import { EventBus } from '../EventBus';
+import * as uiActions from "../../store/ui"
+
+declare namespace globalThis {
+    var sessionUser: any
+    var dispatch: any
+}
 
 export class MainMenu extends Scene
 {
@@ -20,7 +25,6 @@ export class MainMenu extends Scene
 
     create ()
     {       
-
         const newGameOption = new MenuOption(this, 512, 520, "New Game", {
             fontFamily: 'Arial Black', fontSize: 24, color: '#ffffff',
             stroke: '#000000', strokeThickness: 5,
@@ -29,11 +33,12 @@ export class MainMenu extends Scene
             "pointerdown": (
                 _pointer: any, _localX: number,  _localY: number, _event: Event 
             ) => {
-
+                if(!globalThis.sessionUser) return globalThis.dispatch(uiActions.openAuthModalThunk());
             },
             "pointerover": (
                 _pointer: any, _localX: number, _localY: number, _event: Event
             ) => {
+                
             }
         })
 
@@ -45,6 +50,9 @@ export class MainMenu extends Scene
             "pointerdown": (
                 _pointer: any, _localX: number, _localY: number, _event: Event
             ) => {
+                if(!globalThis.sessionUser) return globalThis.dispatch(uiActions.openAuthModalThunk()).then(() => {
+                    this.changeScene('SaveMenu');
+                });
                 this.changeScene('SaveMenu');
             }
         })
