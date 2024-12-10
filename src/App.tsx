@@ -16,7 +16,7 @@ import * as uiActions from "./store/ui"
 
 declare namespace globalThis {
     var sessionUser: any
-    var dispatch: any
+    var dispatch: Function
 }
 
 function App()
@@ -31,6 +31,12 @@ function App()
     // })
     const signerStatus = useSignerStatus();
     const { logout } = useLogout();
+
+    const beginLogout = () => {
+        if(confirm("Are you sure you want to log out? \n\n(You will be returned to the main menu and any unsaved progress may be lost)")) {
+            logout();
+        }
+    }
 
 
     // const [loading, setLoading] = useState(true);
@@ -55,7 +61,11 @@ function App()
         if(+stateIsOpen ^ +isOpen) {
             stateIsOpen ? openAuthModal() : closeAuthModal();
         } 
-    }, [stateIsOpen, openAuthModal, closeAuthModal])
+    }, [stateIsOpen, openAuthModal, closeAuthModal, isOpen])
+
+    useEffect(() => {
+        if(!isOpen) dispatch(uiActions.closeAuthModalThunk())
+    }, [isOpen])
 
     useEffect(() => {
         globalThis.sessionUser = user
@@ -86,7 +96,7 @@ function App()
                     <p className="text-xl font-bold">Success!</p>
                     You're logged in as {user.email ?? "anon"}.<button
                         className="akui-btn akui-btn-primary mt-6"
-                        onClick={() => logout()}
+                        onClick={() => beginLogout()}
                     >
                         Log out
                     </button>

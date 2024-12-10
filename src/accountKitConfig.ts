@@ -1,6 +1,8 @@
 import { AlchemyAccountsUIConfig, createConfig } from "@account-kit/react";
 import { sepolia, alchemy } from "@account-kit/infra";
 import { QueryClient } from "@tanstack/react-query";
+import supabase from "./SupabaseClient";
+import { getUser } from "@account-kit/core"
 
 const uiConfig: AlchemyAccountsUIConfig = {
   illustrationStyle: "outline",
@@ -20,6 +22,20 @@ const uiConfig: AlchemyAccountsUIConfig = {
       ],
     ],
     addPasskeyOnSignup: false,
+    onAuthSuccess: async () => 
+    {
+        const user = getUser(config);
+        // const { data, error } = await supabase().from("identities").select().eq("uuid", user?.userId).eq("provider", user?.orgId)
+
+        // if(!error) {
+          await supabase().from("identities").upsert({
+            uuid: user?.userId,
+            provider: user?.orgId,
+            email: user?.email,
+            last_signed_in_at: new Date().toISOString()
+          })
+        // }
+    }
   },
 };
 
