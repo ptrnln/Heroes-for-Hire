@@ -57,6 +57,15 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      },
+      identities: {
+        Row: {
+          uuid: string
+          created_at: string
+          last_signed_in_at: string
+          provider: string
+          email: string
+        }
       }
     }
     Views: {

@@ -1,4 +1,4 @@
-import { config } from "../config";
+import { config } from "../accountKitConfig";
 import { cookieToInitialState } from "@account-kit/core";
 import { Providers } from "./providers";
  

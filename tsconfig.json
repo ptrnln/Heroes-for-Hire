@@ -21,6 +21,6 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "global.d.ts", "src/config.ts"],
+  "include": ["src", "global.d.ts", "src/accountKitConfig.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
