@@ -53,8 +53,7 @@ function App()
 
     useEffect(() => {
         if(+stateIsOpen ^ +isOpen) {
-            if(stateIsOpen) openAuthModal();
-            else closeAuthModal();
+            stateIsOpen ? openAuthModal() : closeAuthModal();
         } 
     }, [stateIsOpen, openAuthModal, closeAuthModal])
 
