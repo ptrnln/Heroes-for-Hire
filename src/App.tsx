@@ -7,15 +7,25 @@ import {
     useLogout,
     useSignerStatus,
     useUser,
+    UseUserResult,
 } from "@account-kit/react";
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import * as uiActions from "./store/ui"
+import * as uiActions from "./store/ui.js"
 
 // import supabase from './SupabaseClient';
 
+
+/** 
+ * The global object
+ * @sessionUser
+ * The user currently signed in
+ * 
+ * @dispatch
+ * Function for dispatching Redux actions
+*/
 declare namespace globalThis {
-    var sessionUser: any
+    var sessionUser: UseUserResult | null
     var dispatch: Function
 }
 
@@ -33,7 +43,7 @@ function App()
     const { logout } = useLogout();
 
     const beginLogout = () => {
-        if(confirm("Are you sure you want to log out? \n\n(You will be returned to the main menu and any unsaved progress may be lost)")) {
+        if(confirm("Are you sure you want to log out? \n\n(You will be returned to the main menu and any unsaved progress may be lost as a result)")) {
             logout();
         }
     }
@@ -68,7 +78,7 @@ function App()
     }, [isOpen])
 
     useEffect(() => {
-        globalThis.sessionUser = user
+        globalThis.sessionUser = user ?? null
         if(user) dispatch(uiActions.closeAuthModalThunk())
     }, [user, dispatch])
 
