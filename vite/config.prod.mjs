@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import dotenv from "dotenv"
+import tailwindcss from "tailwindcss"
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 dotenv.config();
 
@@ -24,7 +26,8 @@ export default defineConfig({
     base: './',
     plugins: [
         react(),
-        phasermsg()
+        phasermsg(),
+        nodePolyfills()
     ],
     logLevel: 'warning',
     build: {
@@ -45,5 +48,10 @@ export default defineConfig({
                 comments: false
             }
         }
-    }
+    },
+    css: {
+        postcss: {
+            plugins:[tailwindcss()]
+        }
+    },
 });

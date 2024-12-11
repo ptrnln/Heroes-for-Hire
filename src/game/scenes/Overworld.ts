@@ -1,5 +1,6 @@
 import { Scene } from "phaser"
 import { tileSizes, gridMap } from "./tilemaps/overworld.json"
+import { EventBus } from "../EventBus";
 
 
 export default class Overworld extends Scene {
@@ -21,16 +22,27 @@ export default class Overworld extends Scene {
         this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
 
         // Create grass tiles
+        // for(let i = 0; i < gridMap.length; i++) {
+        //     for (let j = 0; j < gridMap[i].length; j++) {
+        //         this.add.sprite(
+        //             (tileSizes.default[0] * (j + 1) - (tileSizes.default[0] / 2)),
+        //             (tileSizes.default[1] * (i + 1) - (tileSizes.default[1] / 2)),
+        //             (grass ?? ""),
+        //             gridMap[i][j]
+        //         ).setScale(0.5);
+        //     }
+        // }
         for(let i = 0; i < gridMap.length; i++) {
             for (let j = 0; j < gridMap[i].length; j++) {
                 this.add.sprite(
-                    (j * tileSizes.default[0] * 0.5) + (tileSizes.default[0] * 0.25),
-                    (i * tileSizes.default[1] * 0.5) + (tileSizes.default[1] * 0.25),
+                    j * tileSizes.default[0] * 0.5,  // Removed the +1 and division by 2
+                    i * tileSizes.default[1] * 0.5,  // Removed the +1 and division by 2
                     (grass ?? ""),
                     gridMap[i][j]
-                ).setScale(0.5);
+                ).setScale(0.5).setOrigin(0, 0);
             }
         }
+        
 
         // Create player
         this.player = this.add.rectangle(100, 100, 48, 48, 0xff0000);
@@ -46,6 +58,7 @@ export default class Overworld extends Scene {
 
         // Setup keyboard input
         this.cursors = (this.input.keyboard as Phaser.Input.Keyboard.KeyboardPlugin).createCursorKeys();
+        EventBus.emit('current-scene-ready', this);
     }
 
     preload(): any {

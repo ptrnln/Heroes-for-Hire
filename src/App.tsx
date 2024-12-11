@@ -1,8 +1,8 @@
-import { useRef, useState } from 'react';
+import { useRef, useCallback, /*useState */ } from 'react';
 import { IRefPhaserGame, PhaserGame } from './game/PhaserGame';
 import { MainMenu } from './game/scenes/MainMenu';
 import {
-    useAuthenticate,
+    /*useAuthenticate,*/
     useAuthModal,
     useLogout,
     useSignerStatus,
@@ -11,7 +11,7 @@ import {
 } from "@account-kit/react";
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import * as uiActions from "./store/ui.js"
+import * as uiActions from "./store/ui"
 
 // import supabase from './SupabaseClient';
 
@@ -54,18 +54,17 @@ function App()
     //  References to the PhaserGame component (game and scene are exposed)
     const phaserRef = useRef<IRefPhaserGame | null>(null);
 
-    const changeScene = () => {
-
+    const changeScene = useCallback((sceneKey: string) => {
         if(phaserRef.current)
         {     
             const scene = phaserRef.current.scene as MainMenu;
             
-            if (scene)
+            if (scene && sceneKey)
             {
-                scene.changeScene();
+                phaserRef.current.game?.scene.start(sceneKey)
             }
         }
-    }
+    }, [])
 
     useEffect(() => {
         if(+stateIsOpen ^ +isOpen) {
@@ -79,11 +78,30 @@ function App()
 
     useEffect(() => {
         globalThis.sessionUser = user ?? null
-        if(user) dispatch(uiActions.closeAuthModalThunk())
+        if(user) dispatch(uiActions.closeAuthModalThunk());
     }, [user, dispatch])
 
     useEffect(() => {
-        globalThis.dispatch = dispatch
+        console.log("User effect triggered:", {
+            userExists: !!user,
+            gameExists: !!phaserRef.current?.game,
+            currentScene: phaserRef.current?.game?.scene.getScenes(true)[0]?.scene?.key
+        });
+        
+        if(!user && phaserRef.current?.game) {
+            console.log("Attempting scene change to MainMenu");
+            const game = phaserRef.current.game;
+            // Stop all active scenes
+            game.scene.getScenes(true).forEach(scene => {
+                game.scene.stop(scene.scene.key);
+            });
+            // Start MainMenu
+            game.scene.start('MainMenu');
+        }
+    }, [user])
+
+    useEffect(() => {
+        if(dispatch) globalThis.dispatch = dispatch
     }, [dispatch])
 
 
