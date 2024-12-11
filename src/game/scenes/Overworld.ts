@@ -1,7 +1,10 @@
 import { Scene } from "phaser"
-import tileMap from "./tilemaps/overworld.json"
+import { tileSizes, gridMap } from "./tilemaps/overworld.json"
+
 
 export default class Overworld extends Scene {
+    private player!: Phaser.GameObjects.Rectangle;
+    private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
 
     constructor () {
         super('Overworld');
@@ -10,20 +13,63 @@ export default class Overworld extends Scene {
     create() {
         const grass = this.textures.exists("grass") ? this.textures.get("grass") : null
 
-        for(let i = 0; i < tileMap.length; i++) {
-            for (let j = 0; j < tileMap[i].length; j++) {
+        // Calculate world bounds based on grid size
+        const worldWidth = gridMap[0].length * tileSizes.default[0] * 0.5;
+        const worldHeight = gridMap.length * tileSizes.default[1] * 0.5;
+        
+        // Set world bounds
+        this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
+
+        // Create grass tiles
+        for(let i = 0; i < gridMap.length; i++) {
+            for (let j = 0; j < gridMap[i].length; j++) {
                 this.add.sprite(
-                    (48 * (j + 1) - 24),
-                    (48 * (i + 1) - 24),
+                    (j * tileSizes.default[0] * 0.5) + (tileSizes.default[0] * 0.25),
+                    (i * tileSizes.default[1] * 0.5) + (tileSizes.default[1] * 0.25),
                     (grass ?? ""),
-                    tileMap[i][j]
-                )
+                    gridMap[i][j]
+                ).setScale(0.5);
             }
         }
 
+        // Create player
+        this.player = this.add.rectangle(100, 100, 48, 48, 0xff0000);
+        this.physics.add.existing(this.player);
+        
+        // Enable physics body and set collision with world bounds
+        const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
+        playerBody.setCollideWorldBounds(true);
+
+        // Setup camera
+        this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
+        this.cameras.main.startFollow(this.player, true);
+
+        // Setup keyboard input
+        this.cursors = (this.input.keyboard as Phaser.Input.Keyboard.KeyboardPlugin).createCursorKeys();
     }
 
     preload(): any {
-        this.load.spritesheet("grass", "assets/grass.png", { frameWidth: 48, frameHeight: 48,  });
+        this.load.spritesheet("grass", "assets/grass.png", { frameWidth: tileSizes.default[0], frameHeight: tileSizes.default[1] });
+    }
+
+    update() {
+        const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
+        const speed = 300;
+
+        // Reset velocity
+        playerBody.setVelocity(0);
+
+        // Handle movement
+        if (this.cursors.left.isDown) {
+            playerBody.setVelocityX(-speed);
+        } else if (this.cursors.right.isDown) {
+            playerBody.setVelocityX(speed);
+        }
+
+        if (this.cursors.up.isDown) {
+            playerBody.setVelocityY(-speed);
+        } else if (this.cursors.down.isDown) {
+            playerBody.setVelocityY(speed);
+        }
     }
 }

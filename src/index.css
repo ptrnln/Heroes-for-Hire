@@ -1,3 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* @font-face{ 
+	font-family: 'DePixel';
+	src: url('/public/assets/fonts/depixelhalbfett-webfont.eot');
+	src: url('/public/assets/fonts/depixelhalbfett-webfont.eot?#iefix') format('embedded-opentype'),
+	     url('/public/assets/fonts/depixelhalbfett-webfont.woff') format('woff'),
+	     url('/public/assets/fonts/depixelhalbfett-webfont.ttf') format('truetype'),
+	     url('/public/assets/fonts/depixelhalbfett-webfont.svg#webfont') format('svg');
+} */

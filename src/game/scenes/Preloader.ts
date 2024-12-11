@@ -39,6 +39,8 @@ export class Preloader extends Scene
 
         this.load.image('logo', 'logo.png');
 
+        this.load.font('DePixel-bold', 'fonts/depixelhalbfett-webfont.woff', 'woff');
+
     }
 
     create ()

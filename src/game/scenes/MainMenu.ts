@@ -26,7 +26,7 @@ export class MainMenu extends Scene
     create ()
     {       
         const newGameOption = new MenuOption(this, 512, 520, "New Game", {
-            fontFamily: 'DePixel', fontSize: 36, color: '#ffffff',
+            fontFamily: 'DePixel-bold', fontSize: 34, color: '#ffffff',
             stroke: '#000000', strokeThickness: 5,
             align: 'center'
         }, {
@@ -45,7 +45,7 @@ export class MainMenu extends Scene
         })
 
         const continueOption = new MenuOption(this, 512, 590, "Continue", {
-            fontFamily: 'DePixel', fontSize: 36, color: '#ffffff',
+            fontFamily: 'DePixel-bold', fontSize: 34, color: '#ffffff',
             stroke: '#000000', strokeThickness: 5,
             align: 'center'
         }, {
@@ -61,7 +61,7 @@ export class MainMenu extends Scene
 
         this.background = this.add.image(512, 384, 'background');
 
-        this.logo = this.add.image(512, 300, 'logo').setDepth(100);
+        this.logo = this.add.image(512, 300, 'logo').setDepth(100).setScale(0.8);
 
         // this.title = this.add.text(512, 460, 'Main Menu', {
         //     fontFamily: 'Arial Black', fontSize: 38, color: '#ffffff',

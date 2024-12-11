@@ -2047,11 +2047,11 @@ video {
   stroke: #EF4444;
 }
 
-@font-face{ 
+/* @font-face{ 
 	font-family: 'DePixel';
-	src: url('fonts/depixelhalbfett-webfont.eot');
-	src: url('fonts/depixelhalbfett-webfont.eot?#iefix') format('embedded-opentype'),
-	     url('fonts/depixelhalbfett-webfont.woff') format('woff'),
-	     url('fonts/depixelhalbfett-webfont.ttf') format('truetype'),
-	     url('fonts/depixelhalbfett-webfont.svg#webfont') format('svg');
-}
+	src: url('assets/fonts/depixelhalbfett-webfont.eot');
+	src: url('assets/fonts/depixelhalbfett-webfont.eot?#iefix') format('embedded-opentype'),
+	     url('assets/fonts/depixelhalbfett-webfont.woff') format('woff'),
+	     url('assets/fonts/depixelhalbfett-webfont.ttf') format('truetype'),
+	     url('assets/fonts/depixelhalbfett-webfont.svg#webfont') format('svg');
+} */
