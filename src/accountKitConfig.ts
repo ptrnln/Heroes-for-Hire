@@ -3,6 +3,7 @@ import { sepolia, alchemy } from "@account-kit/infra";
 import { QueryClient } from "@tanstack/react-query";
 import supabase from "./SupabaseClient";
 import { getUser } from "@account-kit/core"
+import { sign } from "jws"
 
 const uiConfig: AlchemyAccountsUIConfig = {
   illustrationStyle: "outline",
@@ -24,17 +25,37 @@ const uiConfig: AlchemyAccountsUIConfig = {
     addPasskeyOnSignup: false,
     onAuthSuccess: async () => 
     {
-        const user = getUser(config);
-        // const { data, error } = await supabase().from("identities").select().eq("uuid", user?.userId).eq("provider", user?.orgId)
+      const user = getUser(config);
 
-        // if(!error) {
-          await supabase().from("identities").upsert({
-            uuid: user?.userId,
-            provider: user?.orgId,
-            email: user?.email,
-            last_signed_in_at: new Date().toISOString()
-          })
-        // }
+      const now = Math.floor(Date.now() / 1000)
+
+      const token = sign({ payload: {
+        sub: user?.userId,
+        iat: now,
+        exp: now + 3600
+      }, secret: import.meta.env["VITE_JWT_SECRET"], header: {
+        alg: "HS256", typ: "JWT"
+      }})
+
+      const headers = { "Authorization": `Bearer ${token}` };
+
+      const { data, error } = await supabase({ headers }).from("identities").select().eq("user_id", user?.userId).eq("provider_id", user?.orgId)
+
+      if(data.length && !error) {
+        await supabase({ headers }).from("identities").update({
+          user_id: user?.userId,
+          provider_id: user?.orgId,
+          email: user?.email,
+          last_signed_in_at: new Date().toISOString()
+        }).eq("id", data[0]?.id)
+      } else {
+        await supabase({ headers }).from("identities").insert({
+          user_id: user?.userId,
+          provider_id: user?.orgId,
+          email: user?.email,
+          last_signed_in_at: new Date().toISOString()
+        })
+      }
     }
   },
 };

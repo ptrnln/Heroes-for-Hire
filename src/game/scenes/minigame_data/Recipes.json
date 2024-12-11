@@ -1,0 +1,14 @@
+[
+    { 
+        "name": "Ramen",
+        "imageURL": "public/assets/ramen.png"
+    },
+    {
+        "name": "Beef Stew",
+        "imageURL": "public/assets/beef_stew.png"
+    },
+    {
+        "name": "Salmon and Rice",
+        "imageURL": "public/assets/salmon.png"
+    }
+]
