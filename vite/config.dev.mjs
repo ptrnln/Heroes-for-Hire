@@ -14,11 +14,12 @@ export default defineConfig({
         react(), nodePolyfills()
     ],
     server: {
+        host: 'localhost',
         port: 8080
     },
     css: {
         postcss: {
             plugins:[tailwindcss()]
         }
-    }
+    },
 })

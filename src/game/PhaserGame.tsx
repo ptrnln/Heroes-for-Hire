@@ -12,11 +12,9 @@ export interface IRefPhaserGame
 interface IProps
 {
     currentActiveScene?: (scene_instance: Phaser.Scene) => void
-    openAuthModal?: () => void
-    user?: UseUserResult | null
 }
 
-export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame({ currentActiveScene, openAuthModal, user }, ref)
+export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame({ currentActiveScene }, ref)
 {
     const game = useRef<Phaser.Game | null>(null!);
 
@@ -76,11 +74,6 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
             EventBus.removeListener('current-scene-ready');
         }
     }, [currentActiveScene, ref]);
-
-    // useEffect(() => 
-    // {
-
-    // }, [openAuthModal])
 
     return (
         <div id="game-container"></div>
