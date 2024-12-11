@@ -43,9 +43,6 @@ const uiConfig: AlchemyAccountsUIConfig = {
 
       if(data.length && !error) {
         await supabase({ headers }).from("identities").update({
-          user_id: user?.userId,
-          provider_id: user?.orgId,
-          email: user?.email,
           last_signed_in_at: new Date().toISOString()
         }).eq("id", data[0]?.id)
       } else {
