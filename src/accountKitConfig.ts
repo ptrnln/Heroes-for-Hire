@@ -25,7 +25,7 @@ const uiConfig: AlchemyAccountsUIConfig = {
     addPasskeyOnSignup: false,
     onAuthSuccess: async () => 
     {
-      const user = getUser(config);
+      const user= getUser(config);
 
       const now = Math.floor(Date.now() / 1000)
 
@@ -39,9 +39,13 @@ const uiConfig: AlchemyAccountsUIConfig = {
 
       const headers = { "Authorization": `Bearer ${token}` };
 
-      const { data, error } = await supabase({ headers }).from("identities").select().eq("user_id", user?.userId).eq("provider_id", user?.orgId)
+      const { data, error } = await supabase({ headers })
+        .from("identities")
+        .select()
+        .eq("user_id", user?.userId)
+        .eq("provider_id", user?.orgId)
 
-      if(data.length && !error) {
+      if(data?.length && !error) {
         await supabase({ headers }).from("identities").update({
           last_signed_in_at: new Date().toISOString()
         }).eq("id", data[0]?.id)

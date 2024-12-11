@@ -34,7 +34,7 @@ export class MainMenu extends Scene
                 _pointer: any, _localX: number,  _localY: number, _event: Event 
             ) => {
                 if(!globalThis.sessionUser) return globalThis.dispatch(uiActions.openAuthModalThunk());
-
+                
                 this.changeScene('Overworld')
             },
             "pointerover": (

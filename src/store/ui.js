@@ -5,16 +5,16 @@ const initialState = {
 export const OPEN_AUTH_MODAL = "ui/OPEN_AUTH_MODAL"
 export const CLOSE_AUTH_MODAL = "ui/CLOSE_AUTH_MODAL"
 
-export const openAuthModalThunk = () => (dispatch) => {
-    dispatch({
+export const openAuthModalThunk = ()  => {
+    return {
         type: OPEN_AUTH_MODAL
-    })
+    }
 }
 
-export const closeAuthModalThunk = () => (dispatch) => {
-    dispatch({
+export const closeAuthModalThunk = () => {
+    return {
         type: CLOSE_AUTH_MODAL
-    })
+    }
 }
 
 export default function uiReducer(state = initialState, action) {
