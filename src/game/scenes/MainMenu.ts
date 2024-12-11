@@ -26,7 +26,7 @@ export class MainMenu extends Scene
     create ()
     {       
         const newGameOption = new MenuOption(this, 512, 520, "New Game", {
-            fontFamily: 'Arial Black', fontSize: 24, color: '#ffffff',
+            fontFamily: 'DePixel-bold', fontSize: 34, color: '#ffffff',
             stroke: '#000000', strokeThickness: 5,
             align: 'center'
         }, {
@@ -44,15 +44,15 @@ export class MainMenu extends Scene
             }
         })
 
-        const continueOption = new MenuOption(this, 512, 560, "Continue", {
-            fontFamily: 'Arial Black', fontSize: 24, color: '#ffffff',
+        const continueOption = new MenuOption(this, 512, 590, "Continue", {
+            fontFamily: 'DePixel-bold', fontSize: 34, color: '#ffffff',
             stroke: '#000000', strokeThickness: 5,
             align: 'center'
         }, {
             "pointerdown": (
                 _pointer: any, _localX: number, _localY: number, _event: Event
             ) => {
-                if(!globalThis.sessionUser) return globalThis.dispatch(uiActions.openAuthModalThunk()).then(() => {
+                if(!globalThis.sessionUser) globalThis.dispatch(uiActions.openAuthModalThunk()).then(() => {
                     this.changeScene('SaveMenu');
                 });
                 this.changeScene('SaveMenu');
@@ -61,13 +61,13 @@ export class MainMenu extends Scene
 
         this.background = this.add.image(512, 384, 'background');
 
-        this.logo = this.add.image(512, 300, 'logo').setDepth(100);
+        this.logo = this.add.image(512, 300, 'logo').setDepth(100).setScale(0.8);
 
-        this.title = this.add.text(512, 460, 'Main Menu', {
-            fontFamily: 'Arial Black', fontSize: 38, color: '#ffffff',
-            stroke: '#000000', strokeThickness: 8,
-            align: 'center'
-        }).setOrigin(0.5).setDepth(100);
+        // this.title = this.add.text(512, 460, 'Main Menu', {
+        //     fontFamily: 'Arial Black', fontSize: 38, color: '#ffffff',
+        //     stroke: '#000000', strokeThickness: 8,
+        //     align: 'center'
+        // }).setOrigin(0.5).setDepth(100);
 
         this.options.push(newGameOption);
         this.options.push(continueOption);

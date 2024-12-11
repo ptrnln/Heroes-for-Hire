@@ -2046,3 +2046,12 @@ video {
 .dark\:stroke-\[\#EF4444\]:is(.dark, .dark *) {
   stroke: #EF4444;
 }
+
+/* @font-face{ 
+	font-family: 'DePixel';
+	src: url('assets/fonts/depixelhalbfett-webfont.eot');
+	src: url('assets/fonts/depixelhalbfett-webfont.eot?#iefix') format('embedded-opentype'),
+	     url('assets/fonts/depixelhalbfett-webfont.woff') format('woff'),
+	     url('assets/fonts/depixelhalbfett-webfont.ttf') format('truetype'),
+	     url('assets/fonts/depixelhalbfett-webfont.svg#webfont') format('svg');
+} */
