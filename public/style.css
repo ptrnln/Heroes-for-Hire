@@ -46,3 +46,13 @@ body {
         color: rgba(255, 255, 255, 0.3);
     }
 }
+
+
+@font-face{ 
+	font-family: 'DePixel';
+	src: url('fonts/depixelhalbfett-webfont.eot');
+	src: url('fonts/depixelhalbfett-webfont.eot?#iefix') format('embedded-opentype'),
+	     url('fonts/depixelhalbfett-webfont.woff') format('woff'),
+	     url('fonts/depixelhalbfett-webfont.ttf') format('truetype'),
+	     url('fonts/depixelhalbfett-webfont.svg#webfont') format('svg');
+}
