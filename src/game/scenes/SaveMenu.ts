@@ -13,36 +13,18 @@ export class SaveMenu extends Scene {
 
     constructor() {
         super('SaveMenu');
-
-        // try {
-        //     this.getSaves().then((data) => {
-        //         const ul = document.createElement('ul');
-
-        //         data.forEach((save, i) => {
-        //             const saveElement = document.createElement('li');
-        //             const text = `Save-${++i}`
-        //             saveElement.innerText = text
-        //             saveElement.className = 'pr-20px'
-        //             saveElement.onpointerdown = (e) => {
-        //                 this.changeScene();
-        //             }
-        //             ul.appendChild(saveElement);
-        //         });
-
-        //         this.list = ul;
-        //     })
-        // }
-        // catch(err) {
-        //     console.error(err);
-        // }
-        
     }
 
     create() {
         try {
-            this.getSaves().then((data) => {
-                const ul = document.createElement('ul');
+            const container = document.createElement('div');
+            const ul = document.createElement('ul');
+            this.list = ul;
+            container.appendChild(ul);
 
+            const domElement = this.add.dom(480, 480, container, 'background-color: #c4c4c4; cursor: pointer; user-select: none;');
+
+            this.getSaves().then((data) => {
                 data.forEach((_save, i) => {
                     const saveElement = document.createElement('li');
                     const text = `Save-${++i}`
@@ -54,17 +36,9 @@ export class SaveMenu extends Scene {
                     }
                     ul.appendChild(saveElement);
                 });
-
-                this.list = ul;
-            }).finally(()=> {
-                const container = document.createElement('div');
-                container.appendChild(this.list);
-
-                this.add.dom(480, 480, container, 'background-color: #c4c4c4; cursor: pointer; user-select: none;');
-
-                
+            }).finally(() => {
                 EventBus.emit('current-scene-ready', this);
-            })
+            });
         }
         catch(err) {
             console.error(err);
