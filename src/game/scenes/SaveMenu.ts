@@ -48,8 +48,9 @@ export class SaveMenu extends Scene {
                     const text = `Save-${++i}`
                     saveElement.innerText = text
                     saveElement.className = 'pr-20px'
+
                     saveElement.onpointerdown = (_e) => {
-                        this.changeScene();
+                        this.changeScene(_save.player_data.scene_key);
                     }
                     ul.appendChild(saveElement);
                 });
@@ -70,7 +71,8 @@ export class SaveMenu extends Scene {
         }
     }
 
-    changeScene(key='Game') {
+    changeScene(key = 'Overworld') {
+
         this.scene.start(key);
     }
 
