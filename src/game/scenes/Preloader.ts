@@ -1,5 +1,5 @@
 import { Scene } from 'phaser';
-import { PhaserGame } from '../PhaserGame';
+// import { PhaserGame } from '../PhaserGame';
 
 export class Preloader extends Scene
 {
@@ -33,11 +33,7 @@ export class Preloader extends Scene
         //  Load the assets for the game - Replace with your own assets
         this.load.setPath('assets');
 
-        this.load.image('logo', 'logo.png');
         this.load.image('star', 'star.png');
-
-
-        this.load.image('logo', 'logo.png');
 
         this.load.font('DePixel-bold', 'fonts/depixelhalbfett-webfont.woff', 'woff');
 
