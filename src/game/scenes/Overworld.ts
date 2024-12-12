@@ -62,7 +62,7 @@ export default class Overworld extends Scene {
     }
 
     preload(): any {
-        this.load.spritesheet("grass", "assets/grass.png", { frameWidth: tileSizes.default[0], frameHeight: tileSizes.default[1] });
+        this.load.spritesheet("grass", "assets/grass.png", { frameWidth: tileSizes.default[0], frameHeight: tileSizes.default[1], });
     }
 
     update() {

@@ -2,6 +2,9 @@ import { Scene } from "phaser";
 import { EventBus } from "../EventBus";
 import supabase from "../../SupabaseClient";
 import './SaveMenu.css'
+import { sign } from "jws"
+import { getUser } from "@account-kit/core"
+import { config as accountKitConfig } from "../../accountKitConfig";
 // import { SupabaseClient } from "@supabase/supabase-js";
 
 export class SaveMenu extends Scene {
@@ -72,7 +75,26 @@ export class SaveMenu extends Scene {
     }
 
     private async getSaves() {
-        const { data, error } = await supabase().from("game_saves").select();
+        const user= getUser(accountKitConfig);
+
+        const now = Date.now() / 1000
+
+        const token = sign({ payload: {
+            sub: user?.userId,
+            iat: now,
+            exp: now + 3600
+          }, secret: import.meta.env["VITE_JWT_SECRET"], header: {
+            alg: "HS256", typ: "JWT"
+          }});
+
+        const headers = { "Authorization": `Bearer ${token}` };
+
+        const { data, error } = await supabase({ headers })
+            .from("game_saves")
+            .select(`
+                *,
+                identities(user_id)
+            `).eq("identities.user_id", user?.userId);
 
         if(error) throw error
 

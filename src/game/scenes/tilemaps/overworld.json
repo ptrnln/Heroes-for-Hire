@@ -1,4 +1,21 @@
 {
+    "frameKeys": [
+        "null",
+        "suspicious_dirt",
+        "dirt_patch_tl",
+        "dirt_patch_t",
+        "dirt_patch_tr",
+        "blue_flowers",
+        "white_flowers",
+        "dirt_patch_l",
+        "dirt_patch_c",
+        "dirt_patch_r",
+        "yellow_flowers",
+        "red_flowers",
+        "dirt_patch_bl",
+        "dirt_patch_b",
+        "dirt_patch_br"
+    ],
     "tileSizes": {
         "default": [432, 432]
     },
