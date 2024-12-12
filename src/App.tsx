@@ -24,6 +24,7 @@ import * as uiActions from "./store/ui"
  * @dispatch
  * Function for dispatching Redux actions
 */
+
 declare namespace globalThis {
     var sessionUser: UseUserResult | null
     var dispatch: Function
@@ -82,14 +83,8 @@ function App()
     }, [user, dispatch])
 
     useEffect(() => {
-        console.log("User effect triggered:", {
-            userExists: !!user,
-            gameExists: !!phaserRef.current?.game,
-            currentScene: phaserRef.current?.game?.scene.getScenes(true)[0]?.scene?.key
-        });
-        
         if(!user && phaserRef.current?.game) {
-            console.log("Attempting scene change to MainMenu");
+
             const game = phaserRef.current.game;
             // Stop all active scenes
             game.scene.getScenes(true).forEach(scene => {

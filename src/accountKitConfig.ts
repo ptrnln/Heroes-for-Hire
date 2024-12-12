@@ -73,4 +73,9 @@ export const config = createConfig(
   uiConfig,
 );
 
+interface queryClientSingleton {
+  (): () => QueryClient
+  client: QueryClient
+}
+
 export const queryClient = new QueryClient();
