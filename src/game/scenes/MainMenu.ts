@@ -25,6 +25,14 @@ export class MainMenu extends Scene
 
     create ()
     {       
+        if (!this.textures.exists('background') || !this.textures.exists('logo')) {
+            this.time.delayedCall(100, () => this.create());
+            return;
+        }
+    
+        this.background = this.add.image(512, 384, 'background');
+        this.logo = this.add.image(512, 300, 'logo').setDepth(100).setScale(0.8);
+    
         const newGameOption = new MenuOption(this, 512, 520, "New Game", {
             fontFamily: 'DePixel-bold', fontSize: 34, color: '#ffffff',
             stroke: '#000000', strokeThickness: 5,

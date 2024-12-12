@@ -30,22 +30,87 @@ export class Preloader extends Scene
 
     preload ()
     {
-        //  Load the assets for the game - Replace with your own assets
+        // Load the assets for the game
         this.load.setPath('assets');
 
+        // Add a loading text
+        const loadingText = this.add.text(512, 360, 'Loading...', {
+            fontFamily: 'Arial',
+            fontSize: '24px',
+            color: '#ffffff'
+        }).setOrigin(0.5);
+
         this.load.image('star', 'star.png');
-
         this.load.font('DePixel-bold', 'fonts/depixelhalbfett-webfont.woff', 'woff');
+        
+        // Add any other assets that MainMenu needs
+        this.load.image('background', 'bg.png');  // Reload to ensure it's available
+        this.load.image('logo', 'logo.png');      // Reload to ensure it's available
 
+        // Load character spritesheets with correct dimensions
+        this.load.spritesheet('player-down', 'Protag1_FighterWalkingDown.png', {
+            frameWidth: 261,
+            frameHeight: 540
+        });
+        this.load.spritesheet('player-left', 'Protag1_FighterWalkingLeft.png', {
+            frameWidth: 270,
+            frameHeight: 540
+        });
+        this.load.spritesheet('player-up', 'Protag1_FighterWalkingUp.png', {
+            frameWidth: 261,
+            frameHeight: 540
+        });
+
+        // Listen for the complete event
+        this.load.on('complete', () => {
+            loadingText.destroy();
+            this.scene.start('MainMenu');
+        });
     }
 
     create ()
     {
-        //  When all the assets have loaded, it's often worth creating global objects here that the rest of the game can use.
-        //  For example, you can define global animations here, so we can use them in other scenes.
+        // Create the animations
+        this.anims.create({
+            key: 'idle-down',
+            frames: [{ key: 'player-down', frame: 0 }],
+            frameRate: 10
+        });
 
+        this.anims.create({
+            key: 'walk-down',
+            frames: this.anims.generateFrameNumbers('player-down', { start: 0, end: 3 }),
+            frameRate: 10,
+            repeat: -1
+        });
 
-        //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
-        this.scene.start('MainMenu');
+        this.anims.create({
+            key: 'idle-up',
+            frames: [{ key: 'player-up', frame: 0 }],
+            frameRate: 10
+        });
+
+        this.anims.create({
+            key: 'walk-up',
+            frames: this.anims.generateFrameNumbers('player-up', { start: 0, end: 3 }),
+            frameRate: 10,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'idle-left',
+            frames: [{ key: 'player-left', frame: 0 }],
+            frameRate: 10
+        });
+
+        this.anims.create({
+            key: 'walk-left',
+            frames: this.anims.generateFrameNumbers('player-left', { start: 0, end: 3 }),
+            frameRate: 10,
+            repeat: -1
+        });
+
+        // Remove the automatic scene transition
+        // this.scene.start('MainMenu');  // Remove this line
     }
 }

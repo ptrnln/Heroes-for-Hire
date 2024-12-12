@@ -4,7 +4,7 @@ import { EventBus } from "../EventBus";
 
 
 export default class Overworld extends Scene {
-    private player!: Phaser.GameObjects.Rectangle;
+    private player!: Phaser.GameObjects.Sprite;
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
 
     constructor () {
@@ -44,14 +44,15 @@ export default class Overworld extends Scene {
         }
         
 
-        // Create player
-        this.player = this.add.rectangle(100, 100, 48, 48, 0xff0000);
+        // Create player sprite instead of rectangle
+        this.player = this.add.sprite(100, 100, 'player-down')
+            .setScale(0.5);
         this.physics.add.existing(this.player);
         
-        // Enable physics body and set collision with world bounds
         const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
         playerBody.setCollideWorldBounds(true);
-
+        playerBody.setSize(130, 270);  // Half of the up/down frame width (261/2)
+        
         // Setup camera
         this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
         this.cameras.main.startFollow(this.player, true);
@@ -72,17 +73,37 @@ export default class Overworld extends Scene {
         // Reset velocity
         playerBody.setVelocity(0);
 
-        // Handle movement
+        // Handle movement and animations
         if (this.cursors.left.isDown) {
             playerBody.setVelocityX(-speed);
+            this.player.setFlipX(false);
+            this.player.play('walk-left', true);
         } else if (this.cursors.right.isDown) {
             playerBody.setVelocityX(speed);
+            this.player.setFlipX(true);  // Flip the left animation for right movement
+            this.player.play('walk-left', true);
         }
 
         if (this.cursors.up.isDown) {
             playerBody.setVelocityY(-speed);
+            if (!this.cursors.left.isDown && !this.cursors.right.isDown) {
+                this.player.play('walk-up', true);
+            }
         } else if (this.cursors.down.isDown) {
             playerBody.setVelocityY(speed);
+            if (!this.cursors.left.isDown && !this.cursors.right.isDown) {
+                this.player.play('walk-down', true);
+            }
+        }
+
+        // Handle idle animations
+        if (playerBody.velocity.x === 0 && playerBody.velocity.y === 0) {
+            if (this.player.anims.currentAnim) {
+                const direction = this.player.anims.currentAnim.key.split('-')[1];
+                this.player.play(`idle-${direction}`, true);
+            } else {
+                this.player.play('idle-down', true);
+            }
         }
     }
 }
