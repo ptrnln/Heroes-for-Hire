@@ -53,7 +53,7 @@ export class SaveMenu extends Scene {
     private async getSaves() {
         const user= getUser(accountKitConfig);
 
-        const now = Date.now() / 1000
+        const now = Math.floor(Date.now() / 1000)
 
         const token = sign({ payload: {
             sub: user?.userId,
