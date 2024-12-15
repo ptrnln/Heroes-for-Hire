@@ -15,7 +15,7 @@ export class SaveMenu extends Scene {
         super('SaveMenu');
     }
 
-    create() {
+    async create() {
         try {
             const container = document.createElement('div');
             const ul = document.createElement('ul');
@@ -24,23 +24,23 @@ export class SaveMenu extends Scene {
 
             const domElement = this.add.dom(480, 480, container, 'background-color: #c4c4c4; cursor: pointer; user-select: none;');
 
-            this.getSaves().then((data) => {
-                data.forEach((_save, i) => {
-                    const saveElement = document.createElement('li');
-                    const text = `Save-${++i}`
-                    saveElement.innerText = text
-                    saveElement.className = 'pr-20px'
+            const saves = await this.getSaves()
 
-                    saveElement.onpointerdown = (_e) => {
-                        this.changeScene(_save.player_data.scene_key);
-                    }
-                    ul.appendChild(saveElement);
-                });
-            }).finally(() => {
-                EventBus.emit('current-scene-ready', this);
+            saves.forEach((_save, i) => {
+                const saveElement = document.createElement('li');
+                const text = `Save-${++i}`
+                saveElement.innerText = text
+                saveElement.className = 'pr-20px'
+
+                saveElement.onpointerdown = (_e) => {
+                    this.changeScene(_save.player_data.scene_key);
+                }
+                ul.appendChild(saveElement);
             });
-        }
-        catch(err) {
+            // }).finally(() => {
+                EventBus.emit('current-scene-ready', this);
+            // });
+        } catch(err) {
             console.error(err);
         }
     }
@@ -53,7 +53,7 @@ export class SaveMenu extends Scene {
     private async getSaves() {
         const user= getUser(accountKitConfig);
 
-        const now = Math.floor(Date.now() / 1000)
+        const now = Math.floor(Date.now() / 1000);
 
         const token = sign({ payload: {
             sub: user?.userId,

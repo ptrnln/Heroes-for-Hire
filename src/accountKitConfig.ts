@@ -27,7 +27,7 @@ const uiConfig: AlchemyAccountsUIConfig = {
     {
       const user= getUser(config);
 
-      const now = Math.floor(Date.now() / 1000)
+      const now = Math.floor(Date.now() / 1000);
 
       const token = sign({ payload: {
         sub: user?.userId,
