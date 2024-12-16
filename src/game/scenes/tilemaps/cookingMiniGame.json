@@ -1,0 +1,44 @@
+{
+    "levels": [
+        {
+            "difficulty": 0,
+            "textures": {
+                "developer_graphics":{
+                    "frameKeys": [
+                        "default"      
+                    ],
+                    "tileSizes": {
+                        "default": [432, 432]
+                    }
+                },
+                "table": {
+                    "tileSizes": {
+                        "default": [432, 432]
+                    },
+                    "frameKeys": [
+                        "null",
+                        "vertical_top",
+                        "vertical_middle",
+                        "single",
+                        "verticle_bottom",
+                        "null",
+                        "horizontal_left",
+                        "horizontal_middle",
+                        "horizontal_right"
+                    ]
+                }
+            },
+            "layers": [
+                {
+                    "textureKey": "developer_graphics",
+                    "gridMap": [
+                        ["default", "default", "default", "default", "default"],
+                        ["default", "default", "default", "default", "default"],
+                        ["default", "default", "default", "default", "default"],
+                        ["default", "default", "default", "default", "default"]
+                    ]
+                }
+            ]
+        }
+    ]
+}

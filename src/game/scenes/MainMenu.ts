@@ -34,21 +34,20 @@ export class MainMenu extends Scene
             stroke: '#000000', strokeThickness: 5,
             align: 'center'
         }, {
-            "pointerdown": async () => {
-                if (!window.ethereum?.selectedAddress) {
-                    return window.dispatch(uiActions.openAuthModalThunk());
-                }
 
-                const ownership = await ShapecraftService.checkOwnership(
-                    window.ethereum.selectedAddress
-                );
-
-                if (!ownership.hasKey) {
-                    this.showKeyRequiredMessage();
+            "pointerdown": async(
+                _pointer: any, _localX: number,  _localY: number, _event: Event 
+            ) => {
+                if(!globalThis.sessionUser)  {
+                    await globalThis.dispatch(uiActions.openAuthModalThunk());
                     return;
                 }
-
-                this.changeScene('Overworld');
+                this.changeScene('Overworld')
+            },
+            "pointerover": (
+                _pointer: any, _localX: number, _localY: number, _event: Event
+            ) => {
+                
             }
         })
 
@@ -57,12 +56,15 @@ export class MainMenu extends Scene
             stroke: '#000000', strokeThickness: 5,
             align: 'center'
         }, {
-            "pointerdown": () => {
-                if(!window.sessionUser) {
-                    window.dispatch(uiActions.openAuthModalThunk()).then(() => {
-                        this.changeScene('SaveMenu');
-                    });
-                }
+
+            "pointerdown": async (
+                _pointer: any, _localX: number, _localY: number, _event: Event
+            ) => {
+                if(!globalThis.sessionUser)  {
+                    await globalThis.dispatch(uiActions.openAuthModalThunk());
+                    return;
+                };
+
                 this.changeScene('SaveMenu');
             }
         })

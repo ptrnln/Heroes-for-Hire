@@ -1,9 +1,11 @@
-import { AlchemyAccountsUIConfig, createConfig } from "@account-kit/react";
+import { AlchemyAccountsUIConfig, createConfig, } from "@account-kit/react";
 import { sepolia, alchemy } from "@account-kit/infra";
 import { QueryClient } from "@tanstack/react-query";
-import supabase from "./SupabaseClient";
+import useSupabase from "./SupabaseClient";
 import { getUser } from "@account-kit/core"
 import { sign } from "jws"
+// import { useUser } from "@account-kit/react"
+
 
 const uiConfig: AlchemyAccountsUIConfig = {
   illustrationStyle: "outline",
@@ -25,7 +27,9 @@ const uiConfig: AlchemyAccountsUIConfig = {
     addPasskeyOnSignup: false,
     onAuthSuccess: async () => 
     {
-      const user= getUser(config);
+      const user = getUser(config);
+
+      if(!user) return;
 
       const now = Math.floor(Date.now() / 1000);
 
@@ -37,25 +41,36 @@ const uiConfig: AlchemyAccountsUIConfig = {
         alg: "HS256", typ: "JWT"
       }})
 
-      const headers = { "Authorization": `Bearer ${token}` };
+      const signedToken = `Bearer ${token}`;
 
-      const { data, error } = await supabase({ headers })
+      const supabase = useSupabase();
+
+      const { data, error } = await supabase
         .from("identities")
-        .select()
+        .select("*")
         .eq("user_id", user?.userId)
         .eq("provider_id", user?.orgId)
+        .setHeader("Authorization", signedToken)
 
       if(data?.length && !error) {
-        await supabase({ headers }).from("identities").update({
-          last_signed_in_at: new Date().toISOString()
-        }).eq("id", data[0]?.id)
-      } else {
-        await supabase({ headers }).from("identities").insert({
-          user_id: user?.userId,
-          provider_id: user?.orgId,
-          email: user?.email,
+        await supabase
+        .from("identities")
+        .update({
           last_signed_in_at: new Date().toISOString()
         })
+        .eq("id", data[0]?.id)
+        .setHeader("Authorization", signedToken)
+
+      } else {
+        await supabase
+          .from("identities")
+          .insert({
+            user_id: user?.userId,
+            provider_id: user?.orgId,
+            email: user?.email,
+            last_signed_in_at: new Date().toISOString()
+        })
+          .setHeader("Authorization", signedToken)
       }
     }
   },
@@ -73,9 +88,5 @@ export const config = createConfig(
   uiConfig,
 );
 
-interface queryClientSingleton {
-  (): () => QueryClient
-  client: QueryClient
-}
 
 export const queryClient = new QueryClient();
