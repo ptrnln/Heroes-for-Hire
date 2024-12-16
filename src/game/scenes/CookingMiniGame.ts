@@ -192,180 +192,151 @@ export class CookingMiniGame extends Scene {
     }
 
     private handleInteraction() {
-        const playerX = this.player.x;
-        const playerY = this.player.y;
-
-        // Determine the direction the player is facing
-        const match = this.player.anims.currentAnim?.key.match(/(left|up|down)/)?.[0] ?? '';
-        const direction = match === 'left' ? this.player.flipX ? 'right' : 'left' : match;
-
-        // Define offsets for raycasting based on direction
-        const offsets = {
-            left: { x: -1, y: 0 },
-            right: { x: 1, y: 0 },
-            up: { x: 0, y: -1 },
-            down: { x: 0, y: 1 }
-        };
-
-        // Safeguard to ensure offset is defined
-        const offset = offsets[direction as keyof typeof offsets] || { x: 0, y: 1 };
+        const playerBounds = this.player.getBounds();
+        let closestStation: CookingStation | null = null;
+        let minDistance = Number.MAX_VALUE;
 
         let interactedWithStation = false;
 
+        // Find the closest station the player is touching
         this.stations.forEach(station => {
-            // Calculate the vector from the player to the station
-            const vectorX = station.sprite.x - playerX;
-            const vectorY = station.sprite.y - playerY;
-
-            // Normalize the vector
-            const length = Math.sqrt(vectorX * vectorX + vectorY * vectorY);
-            const normalizedX = vectorX / length;
-            const normalizedY = vectorY / length;
-
-            // Check if the station is in the direction the player is facing
-            const dotProduct = normalizedX * offset.x + normalizedY * offset.y;
-
-            // Define a threshold for interaction
-            const interactionThreshold = 0.8; // Adjust this value as needed
-
-            if (dotProduct > interactionThreshold) {
+            const stationBounds = station.sprite.getBounds();
+            if (Phaser.Geom.Intersects.RectangleToRectangle(playerBounds, stationBounds)) {
                 const distance = Phaser.Math.Distance.Between(
-                    playerX,
-                    playerY,
+                    this.player.x,
+                    this.player.y,
                     station.sprite.x,
                     station.sprite.y
                 );
-
-                // Calculate dynamic interaction distance based on the station's size
-                const interactionDistance = Math.max(station.sprite.displayWidth, station.sprite.displayHeight) * 0.5;
-
-                if (distance < interactionDistance) {
-                    interactedWithStation = true;
-                    if (station.type === 'ingredient_shelf') {
-                        if (!this.heldIngredient) {
-                            // Pick up a new ingredient from the shelf
-                            const ingredient = this.add.sprite(
-                                station.sprite.x,
-                                station.sprite.y - 40,
-                                'ingredients',
-                                this.getIngredientFrame(station.ingredientType!, 'raw')
-                            ).setScale(0.5);
-
-                            this.heldIngredient = {
-                                sprite: ingredient,
-                                type: station.ingredientType!,
-                                state: 'raw'
-                            };
-                        }
-                    } else if (station.type === 'garbage_bin') {
-                        if (this.heldIngredient && this.heldIngredient.type !== 'pot') {
-                            // Discard the held ingredient
-                            this.heldIngredient.sprite.destroy();
-                            this.heldIngredient = undefined;
-                        } else if (this.pot && this.pot.contents.length > 0) {
-                            // Empty the pot
-                            this.pot.contents = [];
-                            this.pot.sprite.clearTint();
-                        }
-                    } else if (station.type === 'stove') {
-                        if (this.pot && this.pot.isOnStove && !this.pot.isCooked) {
-                            // Cook the pot
-                            this.cookPot();
-                        } else if (this.heldIngredient && this.heldIngredient.type === 'pot') {
-                            // Place pot on stove
-                            this.pot!.isOnStove = true;
-                            this.pot?.sprite.setPosition(station.sprite.x, station.sprite.y - 40);
-                            this.pot?.sprite.setVisible(true); // Ensure the pot is visible
-                            this.physics.world.enable(this.pot!.sprite); // Re-enable the pot's hitbox
-                            this.heldIngredient = undefined;
-                            station.progress = 0;
-                            station.inUse = true;
-                            station.progressBar?.setVisible(true);
-                        } else if (this.heldIngredient && this.heldIngredient.type === 'salmon') {
-                            // Place salmon on stove
-                            station.currentIngredient = this.heldIngredient.sprite;
-                            station.ingredientType = this.heldIngredient.type;
-                            station.ingredientState = 'cooked';
-                            station.currentIngredient.setPosition(station.sprite.x, station.sprite.y - 40);
-                            station.currentIngredient.setDepth(station.sprite.depth + 1);
-                            this.heldIngredient = undefined;
-                            station.inUse = true;
-                            station.progressBar?.setVisible(true);
-                        } else if (!this.heldIngredient && this.pot && this.pot.isOnStove) {
-                            // Pick up the pot from the stove
-                            this.heldIngredient = {
-                                sprite: this.pot.sprite,
-                                type: 'pot',
-                                state: 'raw'
-                            };
-                            this.pot.isOnStove = false;
-                            this.physics.world.disable(this.pot.sprite); // Disable the pot's hitbox
-                            station.inUse = false;
-                            station.progressBar?.setVisible(false);
-                        } else if (!this.heldIngredient && station.currentIngredient) {
-                            // Pick up the cooked ingredient from the stove
-                            this.heldIngredient = {
-                                sprite: station.currentIngredient,
-                                type: station.ingredientType!,
-                                state: station.ingredientState!
-                            };
-                            station.currentIngredient = undefined;
-                            station.ingredientType = undefined;
-                            station.ingredientState = undefined;
-                            station.inUse = false;
-                            station.progressBar?.setVisible(false);
-                        }
-                    } else {
-                        if (this.heldIngredient && !station.currentIngredient) {
-                            // Place the held ingredient on the station
-                            this.heldIngredient.sprite.setVisible(true); // DO NOT REMOVE
-                            station.currentIngredient = this.heldIngredient.sprite;
-                            station.ingredientType = this.heldIngredient.type;
-                            station.ingredientState = this.heldIngredient.state;
-                            station.currentIngredient.setPosition(station.sprite.x, station.sprite.y - 40);
-                            station.currentIngredient.setDepth(station.sprite.depth + 1); // Ensure ingredient is on top
-                            this.heldIngredient = undefined;
-
-                            if (station.ingredientState === 'raw') {
-                                station.inUse = true;
-                                station.progressBar?.setVisible(true);
-                            }
-                        } else if (!this.heldIngredient && station.currentIngredient) {
-                            // Pick up the processed ingredient from the station
-                            station.progress = 0;
-                            station.inUse = false;
-                            station.progressBar?.setVisible(false);
-                            this.heldIngredient = {
-                                sprite: station.currentIngredient,
-                                type: station.ingredientType!,
-                                state: station.ingredientState!
-                            };
-                            station.currentIngredient = undefined;
-                            station.ingredientState = undefined;
-                        }
-                    }
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestStation = station;
                 }
             }
         });
 
-        // Handle pot interaction
-        if (this.pot) {
-            const potDistance = Phaser.Math.Distance.Between(
-                playerX,
-                playerY,
-                this.pot.sprite.x,
-                this.pot.sprite.y
-            );
+        if(!!closestStation as unknown as CookingStation) {
+            interactedWithStation = true;
+            switch (closestStation!.type) {
+                case 'ingredient_shelf':
+                    if (!this.heldIngredient) {
+                        // Pick up a new ingredient from the shelf
+                        const ingredient = this.add.sprite(
+                            closestStation!.sprite.x,
+                            closestStation!.sprite.y - 40,
+                            'ingredients',
+                            this.getIngredientFrame(closestStation!.ingredientType!, 'raw')
+                        ).setScale(0.5);
 
-            if (potDistance < 100) { // Adjust interaction distance as needed
-                if (this.heldIngredient && this.heldIngredient.type === 'pot') {
-                    // Place the pot down only if not interacting with a station
-                    if (!interactedWithStation) {
-                        this.pot.sprite.setPosition(playerX, playerY + 40); // Place the pot at the player's position
-                        this.physics.world.enable(this.pot.sprite); // Re-enable the pot's hitbox
-                        this.pot.sprite.setVisible(true); // Ensure the pot is visible
-                        this.heldIngredient = undefined;
+                        this.heldIngredient = {
+                            sprite: ingredient,
+                            type: closestStation!.ingredientType!,
+                            state: 'raw'
+                        };
                     }
+                    break;
+                case 'garbage_bin':
+                    if (this.heldIngredient && this.heldIngredient.type !== 'pot') {
+                        // Discard the held ingredient
+                        this.heldIngredient.sprite.destroy();
+                        this.heldIngredient = undefined;
+                    } else if (this.pot && this.pot.contents.length > 0) {
+                        // Empty the pot
+                        this.pot.contents = [];
+                        this.pot.sprite.clearTint();
+                    }
+                    break;
+                case 'stove':
+                    if (this.pot && this.pot.isOnStove && !this.pot.isCooked) {
+                        // Cook the pot
+                        this.cookPot();
+                    } else if (this.heldIngredient && this.heldIngredient.type === 'pot') {
+                        // Place pot on stove
+                        this.pot!.isOnStove = true;
+                        this.pot?.sprite.setPosition(closestStation.sprite.x, closestStation.sprite.y - 40);
+                        this.pot?.sprite.setVisible(true); // Ensure the pot is visible
+                        this.physics.world.enable(this.pot!.sprite); // Re-enable the pot's hitbox
+                        this.heldIngredient = undefined;
+                        closestStation!.progress = 0;
+                        closestStation!.inUse = true;
+                        closestStation!.progressBar?.setVisible(true);
+                    } else if (this.heldIngredient && this.heldIngredient.type === 'salmon') {
+                        // Place salmon on stove
+                        closestStation!.currentIngredient = this.heldIngredient.sprite;
+                        closestStation!.ingredientType = this.heldIngredient.type;
+                        closestStation!.ingredientState = 'cooked';
+                        closestStation!.currentIngredient.setPosition(closestStation!.sprite.x, closestStation!.sprite.y - 40);
+                        closestStation!.currentIngredient.setDepth(closestStation!.sprite.depth + 1);
+                        this.heldIngredient = undefined;
+                        closestStation!.inUse = true;
+                        closestStation!.progressBar?.setVisible(true);
+                    } else if (!this.heldIngredient && this.pot && this.pot.isOnStove) {
+                        // Pick up the pot from the stove
+                        this.heldIngredient = {
+                            sprite: this.pot.sprite,
+                            type: 'pot',
+                            state: 'raw'
+                        };
+                        this.pot.isOnStove = false;
+                        this.physics.world.disable(this.pot.sprite); // Disable the pot's hitbox
+                        closestStation!.inUse = false;
+                        closestStation!.progressBar?.setVisible(false);
+                    } else if (!this.heldIngredient && closestStation!.currentIngredient) {
+                        // Pick up the cooked ingredient from the stove
+                        this.heldIngredient = {
+                            sprite: closestStation!.currentIngredient,
+                            type: closestStation!.ingredientType!,
+                            state: closestStation!.ingredientState!
+                        };
+                        closestStation!.currentIngredient = undefined;
+                        closestStation!.ingredientType = undefined;
+                        closestStation!.ingredientState = undefined;
+                        closestStation!.inUse = false;
+                        closestStation!.progressBar?.setVisible(false);
+                    }
+                    break;
+                default:
+                    if (this.heldIngredient && !closestStation!.currentIngredient) {
+                        // Place the held ingredient on the station
+                        this.heldIngredient.sprite.setVisible(true); // DO NOT REMOVE
+                        closestStation!.currentIngredient = this.heldIngredient.sprite;
+                        closestStation!.ingredientType = this.heldIngredient.type;
+                        closestStation!.ingredientState = this.heldIngredient.state;
+                        closestStation!.currentIngredient.setPosition(closestStation!.sprite.x, closestStation!.sprite.y - 40);
+                        closestStation!.currentIngredient.setDepth(closestStation!.sprite.depth + 1); // Ensure ingredient is on top
+                        this.heldIngredient = undefined;
+
+                        if (closestStation!.ingredientState === 'raw') {
+                            closestStation!.inUse = true;
+                            closestStation!.progressBar?.setVisible(true);
+                        }
+                    } else if (!this.heldIngredient && closestStation!.currentIngredient) {
+                        // Pick up the processed ingredient from the station
+                        closestStation!.progress = 0;
+                        closestStation!.inUse = false;
+                        closestStation!.progressBar?.setVisible(false);
+                        this.heldIngredient = {
+                            sprite: closestStation!.currentIngredient,
+                            type: closestStation!.ingredientType!,
+                            state: closestStation!.ingredientState!
+                        };
+                        closestStation!.currentIngredient = undefined;
+                        closestStation!.ingredientState = undefined;
+                    }
+                    break;
+            }
+        }
+
+        // Handle pot interaction if not interacting with a station
+        if (!interactedWithStation && this.pot) {
+            const potBounds = this.pot.sprite.getBounds();
+            if (Phaser.Geom.Intersects.RectangleToRectangle(playerBounds, potBounds)) {
+                if (this.heldIngredient && this.heldIngredient.type === 'pot') {
+                    // Place the pot down
+                    this.pot.sprite.setPosition(this.player.x, this.player.y + 40); // Place the pot at the player's position
+                    this.physics.world.enable(this.pot.sprite); // Re-enable the pot's hitbox
+                    this.pot.sprite.setVisible(true); // Ensure the pot is visible
+                    this.heldIngredient = undefined;
                 } else if (!this.heldIngredient) {
                     // Pick up the pot
                     this.heldIngredient = {
@@ -376,7 +347,7 @@ export class CookingMiniGame extends Scene {
                     this.physics.world.disable(this.pot.sprite); // Disable the pot's hitbox
                 } else if (this.heldIngredient && this.heldIngredient.type !== 'pot') {
                     // Add ingredient to pot
-                    const existingIngredient = this.pot.contents.find(item => item.type === this.heldIngredient.type && item.state === this.heldIngredient.state);
+                    const existingIngredient = this.pot.contents.find(item => item.type === this.heldIngredient?.type && item.state === this.heldIngredient?.state);
                     if (existingIngredient) {
                         existingIngredient.quantity += 1;
                     } else {
@@ -537,7 +508,7 @@ export class CookingMiniGame extends Scene {
                 station.progressBar.setFrame(frameNumber > 7 ? 7 : frameNumber);
 
                 // Make progress bar blink red if progress is over 125
-                if (station.progress > 125) {
+                if (station.progress > 125 && station.type !== 'cutting_board') {
                     const isRed = Math.floor(station.progress / 10) % 2 === 0;
                     station.progressBar.setTint(isRed ? 0xff0000 : 0xffffff);
                 } else {
@@ -548,18 +519,28 @@ export class CookingMiniGame extends Scene {
             if (station.progress >= 100) {
                 // Update ingredient state based on station type
                 if (station.currentIngredient) {
-                    const shouldNotCookAlone = ['carrot', 'tomato', 'onion', 'potato', 'rice', 'dough'];
-                    const isOvercooked = station.progress >= 150; // Burn threshold
-
-                    if (station.type === 'stove' && (shouldNotCookAlone.includes(station.ingredientType!) || isOvercooked)) {
-                        // Turn to ash
-                        station.ingredientState = 'ash';
-                        station.currentIngredient.setFrame(0); // Default to the first frame
-                        station.currentIngredient.setTint(0x000000); // Apply black tint
-                    } else if (station.progress < 150) {
-                        station.ingredientState = station.type === 'stove' ? 'cooked' : 'chopped';
+                    if (station.type === 'cutting_board') {
+                        // For cutting board, simply chop the ingredient
+                        station.ingredientState = 'chopped';
                         const newFrame = this.getIngredientFrame(station.ingredientType!, station.ingredientState);
                         station.currentIngredient.setFrame(newFrame);
+                        station.progress = 0; // Reset progress
+                        station.inUse = false;
+                        station.progressBar?.setVisible(false); // Hide progress bar
+                    } else {
+                        const shouldNotCookAlone = ['carrot', 'tomato', 'onion', 'potato', 'rice', 'dough'];
+                        const isOvercooked = station.progress >= 150; // Burn threshold
+
+                        if (station.type === 'stove' && (shouldNotCookAlone.includes(station.ingredientType!) || isOvercooked)) {
+                            // Turn to ash
+                            station.ingredientState = 'ash';
+                            station.currentIngredient.setFrame(0); // Default to the first frame
+                            station.currentIngredient.setTint(0x000000); // Apply black tint
+                        } else if (station.progress < 150) {
+                            station.ingredientState = 'cooked';
+                            const newFrame = this.getIngredientFrame(station.ingredientType!, station.ingredientState);
+                            station.currentIngredient.setFrame(newFrame);
+                        }
                     }
                 }
             }
