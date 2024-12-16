@@ -1,7 +1,8 @@
 import { forwardRef, useEffect, useLayoutEffect, useRef } from 'react';
 import StartGame from './main';
 import { EventBus } from './EventBus';
-import { UseUserResult } from '@account-kit/react';
+// import { UseUserResult } from '@account-kit/react';
+// import { PhaserGame } from './PhaserGame';
 
 export interface IRefPhaserGame
 {

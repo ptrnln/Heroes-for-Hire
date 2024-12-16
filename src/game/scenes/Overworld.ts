@@ -4,6 +4,7 @@ import { EventBus } from "../EventBus";
 
 
 export default class Overworld extends Scene {
+    
     private player!: Phaser.GameObjects.Sprite;
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
 
@@ -21,22 +22,12 @@ export default class Overworld extends Scene {
         // Set world bounds
         this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
 
-        // Create grass tiles
-        // for(let i = 0; i < gridMap.length; i++) {
-        //     for (let j = 0; j < gridMap[i].length; j++) {
-        //         this.add.sprite(
-        //             (tileSizes.default[0] * (j + 1) - (tileSizes.default[0] / 2)),
-        //             (tileSizes.default[1] * (i + 1) - (tileSizes.default[1] / 2)),
-        //             (grass ?? ""),
-        //             gridMap[i][j]
-        //         ).setScale(0.5);
-        //     }
-        // }
+
         for(let i = 0; i < gridMap.length; i++) {
             for (let j = 0; j < gridMap[i].length; j++) {
                 this.add.sprite(
-                    j * tileSizes.default[0] * 0.5,  // Removed the +1 and division by 2
-                    i * tileSizes.default[1] * 0.5,  // Removed the +1 and division by 2
+                    j * tileSizes.default[0] * 0.5,  
+                    i * tileSizes.default[1] * 0.5,  
                     (grass ?? ""),
                     gridMap[i][j]
                 ).setScale(0.5).setOrigin(0, 0);
