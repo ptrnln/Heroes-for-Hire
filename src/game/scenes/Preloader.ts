@@ -39,8 +39,6 @@ export class Preloader extends Scene
             fontSize: '24px',
             color: '#ffffff'
         }).setOrigin(0.5);
-
-        this.load.image('star', 'star.png');
         this.load.font('DePixel-bold', 'fonts/depixelhalbfett-webfont.woff', 'woff');
         
         // Add any other assets that MainMenu needs
@@ -67,7 +65,7 @@ export class Preloader extends Scene
         });
 
         this.load.spritesheet('player-carrying-left', 'Protag1_FighterCarryingLeft.png', {
-            frameWidth: 261,
+            frameWidth: 270,
             frameHeight: 540
         });
 
@@ -88,11 +86,18 @@ export class Preloader extends Scene
             frameHeight: 45
         });
 
+        // load work station spritesheet
+        this.load.spritesheet('cooking_stations', 'cooking_stations.png', {
+            frameWidth: 432,
+            frameHeight: 432
+        });
+
         // Listen for the complete event
         this.load.on('complete', () => {
             loadingText.destroy();
             this.scene.start('MainMenu');
         });
+
     }
 
     create ()
@@ -138,13 +143,13 @@ export class Preloader extends Scene
         });
 
         this.anims.create({
-            key: 'idle-carrying-down',
+            key: 'idle-carry-down',
             frames: [{ key: 'player-carrying-down', frame: 0 }],
             frameRate: 10
         });
 
         this.anims.create({
-            key: 'idle-carrying-left',
+            key: 'idle-carry-left',
             frames: [{ key: 'player-carrying-left', frame: 0 }],
             frameRate: 10
         });
@@ -163,16 +168,24 @@ export class Preloader extends Scene
         // });
 
         this.anims.create({
-            key: 'walk-carrying-left',
+            key: 'walk-carry-left',
             frames: this.anims.generateFrameNumbers('player-carrying-left', { start: 0, end: 3 }),
             frameRate: 10,
             repeat: -1
         });
 
         this.anims.create({
-            key: 'walk-carrying-down',
+            key: 'walk-carry-down',
             frames: this.anims.generateFrameNumbers('player-carrying-down', { start: 0, end: 3 }),
             frameRate: 10,
+            repeat: -1
+        });
+
+        // Create stove animation
+        this.anims.create({
+            key: 'stove-burning',
+            frames: this.anims.generateFrameNumbers('cooking_stations', { start: 2, end: 3 }),
+            frameRate: 2,
             repeat: -1
         });
 

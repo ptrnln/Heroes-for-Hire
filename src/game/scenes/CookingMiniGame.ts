@@ -1,9 +1,11 @@
 import { GameObjects, Scene } from "phaser";
 import { EventBus } from "../EventBus";
 
+type StationType = 'stove' | 'cutting_board' | 'ingredient_shelf' | 'garbage_bin';
+
 interface CookingStation {
-    sprite: Phaser.GameObjects.Rectangle;
-    type: 'stove' | 'cutting_board' | 'ingredient_shelf' | 'garbage_bin';
+    sprite: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Sprite;
+    type: StationType;
     inUse: boolean;
     progress?: number;
     progressBar?: Phaser.GameObjects.Sprite;
@@ -40,6 +42,9 @@ export class CookingMiniGame extends Scene {
         playerBody.setCollideWorldBounds(true);
         playerBody.setSize(130, 270);
 
+        // Set base depths
+        this.player.setDepth(10); // Higher base depth for player
+
         // Create stations
         this.createStation(200, 150, 'stove', 0xff0000);
         this.createStation(600, 150, 'cutting_board', 0x00ff00);
@@ -60,12 +65,34 @@ export class CookingMiniGame extends Scene {
         // Add interaction key
         this.input.keyboard?.on('keydown-SPACE', () => this.handleInteraction());
 
+        // Add keyboard input for pause
+        this.input.keyboard?.on('keydown-ESC', () => {
+            this.scene.launch('PauseMenu');
+            this.scene.pause();
+        });
+
         EventBus.emit('current-scene-ready', this);
     }
 
-    private createStation(x: number, y: number, type: 'stove' | 'cutting_board' | 'ingredient_shelf' | 'garbage_bin', color: number, ingredientType?: string) {
-        const sprite = this.add.rectangle(x, y, 64, 64, color);
-        this.physics.add.existing(sprite, true); // true makes it static
+    private createStation(x: number, y: number, type: StationType, color: number, ingredientType?: string) {
+        let sprite;
+        
+        if (type === 'stove') {
+            sprite = this.add.sprite(x, y, 'cooking_stations', 2).setScale(0.5);
+            sprite.play('stove-burning');
+            this.physics.add.existing(sprite, true);
+            (sprite.body as Phaser.Physics.Arcade.Body).setSize(100, 50);
+            (sprite.body as Phaser.Physics.Arcade.Body).offset.set(17, 60);
+        } else if (type === 'cutting_board') {
+            sprite = this.add.sprite(x, y, 'cooking_stations', 0).setScale(0.5);
+            this.physics.add.existing(sprite, true);
+            (sprite.body as Phaser.Physics.Arcade.Body).setSize(100, 20);
+            (sprite.body as Phaser.Physics.Arcade.Body).offset.set(17, 80);
+        } else {
+            sprite = this.add.rectangle(x, y, 64, 64, color);
+            this.physics.add.existing(sprite, true);
+        }
+
 
         const station: CookingStation = {
             sprite,
@@ -77,7 +104,7 @@ export class CookingMiniGame extends Scene {
 
         // Only add progress bars for cooking/cutting stations
         if (type !== 'ingredient_shelf' && type !== 'garbage_bin') {
-            station.progressBar = this.add.sprite(x, y - 40, 'progress_bar', 0)
+            station.progressBar = this.add.sprite(x, y - 80, 'progress_bar', 0)
                 .setOrigin(0.5, 0.5)
                 .setVisible(false)
                 .setDepth(100)
@@ -108,7 +135,7 @@ export class CookingMiniGame extends Scene {
                         // Create new ingredient using spritesheet
                         const ingredient = this.add.sprite(
                             station.sprite.x,
-                            station.sprite.y - 40,
+                            station.sprite.y,
                             'ingredients',
                             this.getIngredientFrame(station.ingredientType!, 'raw')
                         ).setScale(0.5)
@@ -133,7 +160,7 @@ export class CookingMiniGame extends Scene {
                         station.currentIngredient = this.heldIngredient.sprite;
                         station.ingredientType = this.heldIngredient.type; // Save the ingredient type to the station
                         station.ingredientState = this.heldIngredient.state;
-                        station.currentIngredient.setPosition(station.sprite.x, station.sprite.y);
+                        station.currentIngredient.setPosition(station.sprite.x, station.sprite.y - 40);
                         this.heldIngredient = undefined;
                         
                         if (station.ingredientState === 'raw') {
@@ -166,11 +193,19 @@ export class CookingMiniGame extends Scene {
         if (this.cursors.left.isDown) {
             playerBody.setVelocityX(-speed);
             this.player.setFlipX(false);
-            this.player.play('walk-left', true);
+            if(this.heldIngredient) {
+                this.player.play('walk-carry-left', true);
+            } else {
+                this.player.play('walk-left', true);
+            }
         } else if (this.cursors.right.isDown) {
             playerBody.setVelocityX(speed);
             this.player.setFlipX(true);
-            this.player.play('walk-left', true);
+            if(this.heldIngredient) {
+                this.player.play('walk-carry-left', true);
+            } else {
+                this.player.play('walk-left', true);
+            }
         }
 
         if (this.cursors.up.isDown) {
@@ -181,25 +216,57 @@ export class CookingMiniGame extends Scene {
         } else if (this.cursors.down.isDown) {
             playerBody.setVelocityY(speed);
             if (!this.cursors.left.isDown && !this.cursors.right.isDown) {
-                this.player.play('walk-down', true);
+                if(this.heldIngredient) {
+                    this.player.play('walk-carry-down', true);
+                } else {
+                    this.player.play('walk-down', true);
+                }
             }
         }
 
         // Handle idle animations
         if (playerBody.velocity.x === 0 && playerBody.velocity.y === 0) {
             if (this.player.anims.currentAnim) {
-                const direction = this.player.anims.currentAnim.key.split('-')[1];
-                this.player.play(`idle-${direction}`, true);
+                const direction = this.player.anims.currentAnim.key.match(/(left|up|down)/)![0];
+                if (direction === 'up') {
+                    this.player.play('idle-up', true);
+                } else {
+                    if(this.heldIngredient) {
+                        this.player.play(`idle-carry-${direction}`, true);
+                    } else {
+                        this.player.play(`idle-${direction}`, true);
+                    }
+                }
             } else {
-                this.player.play('idle-down', true);
+                if(this.heldIngredient) {
+                    this.player.play('idle-carry-down', true);
+                } else {
+                    this.player.play('idle-down', true);
+                }
             }
         }
 
-        // Update held ingredient position
+        // Simple depth sorting
+        this.stations.forEach(station => {
+            if (station.type === 'stove' || station.type === 'cutting_board') {
+                const stationDepth = this.player.y > station.sprite.y ? 5 : 15;
+                station.sprite.setDepth(stationDepth);
+                if (station.currentIngredient) {
+                    station.currentIngredient.setDepth(stationDepth + 1);
+                }
+            }
+        });
+
+        // Held ingredient always on top
         if (this.heldIngredient) {
+            this.heldIngredient.sprite.setDepth(20);
             this.heldIngredient.sprite.setPosition(
-                this.player.x,
-                this.player.y + 40
+                ((this.player.anims.currentAnim?.key === 'walk-carry-left' || this.player.anims.currentAnim?.key === 'idle-carry-left') && !this.player.flipX) ? 
+                    this.player.x - 40 
+                    : (this.player.anims.currentAnim?.key === 'walk-carry-left' || this.player.anims.currentAnim?.key === 'idle-carry-left') && this.player.flipX ? 
+                        this.player.x + 40 
+                        : this.player.x,
+                this.player.y + 30
             );
         }
 
@@ -230,10 +297,10 @@ export class CookingMiniGame extends Scene {
 
         // Only update progress if the player is close enough
         if (distance <= 120 || station.type !== 'cutting_board') {
-            station.progress = (station.progress || 0) + 0.08; // Adjust the increment for smoother progress
+            station.progress = (station.progress || 0) + 0.12; // Adjust the increment for smoother progress
             
             if (station.progressBar) {
-                station.progressBar.setFrame(Math.floor((station.progress || 0) / 12.5));
+                station.progressBar.setFrame(Math.floor((station.progress || 0) / 14.3));
             }
 
             if (station.progress >= 100) {
