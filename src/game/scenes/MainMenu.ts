@@ -3,11 +3,7 @@ import { MenuOption } from '../types/MenuOption';
 
 import { EventBus } from '../EventBus';
 import * as uiActions from "../../store/ui"
-
-declare namespace globalThis {
-    var sessionUser: any
-    var dispatch: any
-}
+import { ShapecraftService } from '../services/ShapecraftService';
 
 export class MainMenu extends Scene
 {
@@ -38,17 +34,21 @@ export class MainMenu extends Scene
             stroke: '#000000', strokeThickness: 5,
             align: 'center'
         }, {
-            "pointerdown": (
-                _pointer: any, _localX: number,  _localY: number, _event: Event 
-            ) => {
-                if(!globalThis.sessionUser) return globalThis.dispatch(uiActions.openAuthModalThunk());
-                
-                this.changeScene('Overworld')
-            },
-            "pointerover": (
-                _pointer: any, _localX: number, _localY: number, _event: Event
-            ) => {
-                
+            "pointerdown": async () => {
+                if (!window.ethereum?.selectedAddress) {
+                    return window.dispatch(uiActions.openAuthModalThunk());
+                }
+
+                const ownership = await ShapecraftService.checkOwnership(
+                    window.ethereum.selectedAddress
+                );
+
+                if (!ownership.hasKey) {
+                    this.showKeyRequiredMessage();
+                    return;
+                }
+
+                this.changeScene('Overworld');
             }
         })
 
@@ -57,30 +57,31 @@ export class MainMenu extends Scene
             stroke: '#000000', strokeThickness: 5,
             align: 'center'
         }, {
-            "pointerdown": (
-                _pointer: any, _localX: number, _localY: number, _event: Event
-            ) => {
-                if(!globalThis.sessionUser) globalThis.dispatch(uiActions.openAuthModalThunk()).then(() => {
-                    this.changeScene('SaveMenu');
-                });
+            "pointerdown": () => {
+                if(!window.sessionUser) {
+                    window.dispatch(uiActions.openAuthModalThunk()).then(() => {
+                        this.changeScene('SaveMenu');
+                    });
+                }
                 this.changeScene('SaveMenu');
             }
         })
-
-        this.background = this.add.image(512, 384, 'background');
-
-        this.logo = this.add.image(512, 300, 'logo').setDepth(100).setScale(0.8);
-
-        // this.title = this.add.text(512, 460, 'Main Menu', {
-        //     fontFamily: 'Arial Black', fontSize: 38, color: '#ffffff',
-        //     stroke: '#000000', strokeThickness: 8,
-        //     align: 'center'
-        // }).setOrigin(0.5).setDepth(100);
 
         this.options.push(newGameOption);
         this.options.push(continueOption);
 
         EventBus.emit('current-scene-ready', this);
+    }
+
+    private showKeyRequiredMessage() {
+        this.add.text(512, 450, 'You need a Shapecraft Key to play!', {
+            fontFamily: 'DePixel-bold',
+            fontSize: 24,
+            color: '#ff0000',
+            stroke: '#000000',
+            strokeThickness: 4,
+            align: 'center'
+        }).setOrigin(0.5);
     }
 
     
