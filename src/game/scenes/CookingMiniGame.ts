@@ -1,7 +1,8 @@
 import { GameObjects, Scene } from "phaser";
 import { EventBus } from "../EventBus";
-
+import { recipes } from "./Recipes";
 type StationType = 'stove' | 'cutting_board' | 'ingredient_shelf' | 'garbage_bin';
+type IngredientState = 'raw' | 'chopped' | 'cooked' | 'ash';
 
 interface CookingStation {
     sprite: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Sprite;
@@ -11,13 +12,21 @@ interface CookingStation {
     progressBar?: Phaser.GameObjects.Sprite;
     currentIngredient?: Phaser.GameObjects.Sprite;
     ingredientType?: string;
-    ingredientState?: 'raw' | 'chopped' | 'cooked';
+    ingredientState?: IngredientState;
+    preview?: Phaser.GameObjects.Sprite;
 }
 
 interface Ingredient {
     sprite: Phaser.GameObjects.Sprite;
     type: string;
-    state: 'raw' | 'chopped' | 'cooked';
+    state: IngredientState;
+}
+
+interface Pot {
+    sprite: Phaser.GameObjects.Sprite;
+    contents: { type: string; state: string; quantity: number }[];
+    isOnStove: boolean;
+    isCooked: boolean;
 }
 
 export class CookingMiniGame extends Scene {
@@ -25,15 +34,21 @@ export class CookingMiniGame extends Scene {
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     private stations: CookingStation[] = [];
     private heldIngredient?: Ingredient;
+    private pot?: Pot;
     
     constructor() {
         super('CookingMiniGame');
     }
 
     create() {
-        // Setup background
-        this.add.rectangle(0, 0, 800, 600, 0xcccccc).setOrigin(0, 0);
+        // Create a larger background (150% of canvas size)
+        this.add.tileSprite(0, 0, 3072, 2304, 'wood_floor')
+            .setOrigin(0, 0)
+            .setScale(0.5);
 
+        // Set up camera bounds
+        this.cameras.main.setBounds(0, 0, 1536, 1152);
+        
         // Create player
         this.player = this.add.sprite(400, 300, 'player-walking-down').setScale(0.5);
         this.physics.add.existing(this.player);
@@ -42,57 +57,119 @@ export class CookingMiniGame extends Scene {
         playerBody.setCollideWorldBounds(true);
         playerBody.setSize(130, 270);
 
+        // Set world bounds for physics
+        this.physics.world.setBounds(0, 0, 1536, 1152);
+
+        // Make camera follow player
+        this.cameras.main.startFollow(this.player, true);
+        this.cameras.main.setZoom(1);
+
         // Set base depths
         this.player.setDepth(10); // Higher base depth for player
 
-        // Create stations
-        this.createStation(200, 150, 'stove', 0xff0000);
-        this.createStation(600, 150, 'cutting_board', 0x00ff00);
+        // Create ingredient stations at bottom left with more spacing
+        const ingredients = ['onion', 'tomato', 'carrot', 'potato', 'salmon'];
+        const startX = 200;  
+        const startY = 1000;
+        const spacing = 200;  
+        
+        ingredients.forEach((ingredient, index) => {
+            // Create the station first
+            this.createStation(startX + (index * spacing), startY, 'ingredient_shelf', ingredient);
+            
+            // Add ingredient preview above the station
+            this.add.sprite(startX + (index * spacing), startY - 20, 'ingredients', 
+                this.getIngredientFrame(ingredient, 'raw'))
+                .setScale(0.4);
+        });
 
-        // Create ingredient stations
-        this.createStation(100, 500, 'ingredient_shelf', 0xffff00, 'onion');
-        this.createStation(200, 500, 'ingredient_shelf', 0xffff00, 'tomato');
-        this.createStation(300, 500, 'ingredient_shelf', 0xffff00, 'carrot');
-        this.createStation(400, 500, 'ingredient_shelf', 0xffff00, 'potato');
-        this.createStation(500, 500, 'ingredient_shelf', 0xffff00, 'salmon');
+        // Create other stations
+        this.createStation(200, 150, 'stove');
+        this.createStation(600, 150, 'cutting_board');
 
         // Create garbage bin
-        this.createStation(700, 500, 'garbage_bin', 0x888888);
+        this.createStation(700, 500, 'garbage_bin');
+
+        // Create pot
+        const potSprite = this.add.sprite(300, 300, 'pot').setScale(0.5);
+        this.pot = {
+            sprite: potSprite,
+            contents: [],
+            isOnStove: false,
+            isCooked: false
+        };
+
+        this.physics.add.existing(potSprite, false);
+        const potBody = potSprite.body as Phaser.Physics.Arcade.StaticBody;
+        potBody.setSize(potSprite.displayWidth * 0.5, potSprite.displayHeight * 0.5)
+            // .setOffset(potSprite.displayWidth * 0.1, potSprite.displayHeight * 0.1) // Adjust hitbox size and offset
+        potBody.setImmovable(true);
+
+        this.physics.add.collider(this.player, potSprite);
 
         // Setup keyboard input
         this.cursors = this.input.keyboard?.createCursorKeys() as Phaser.Types.Input.Keyboard.CursorKeys;
 
         // Add interaction key
         this.input.keyboard?.on('keydown-SPACE', () => this.handleInteraction());
-
-        // Add keyboard input for pause
         this.input.keyboard?.on('keydown-ESC', () => {
-            this.scene.launch('PauseMenu');
-            this.scene.pause();
+            this.isPaused = !this.isPaused;
+            if(this.isPaused) {
+                this.scene.launch('PauseMenu');
+                this.scene.pause();
+            } else {
+                this.scene.resume();
+            }
         });
 
         EventBus.emit('current-scene-ready', this);
     }
 
-    private createStation(x: number, y: number, type: StationType, color: number, ingredientType?: string) {
-        let sprite;
-        
+    private createStation(x: number, y: number, type: StationType, ingredientType?: string) {
+        let sprite: Phaser.GameObjects.Sprite | Phaser.GameObjects.Rectangle;
+
+        if (type === 'garbage_bin') {
+            sprite = this.add.rectangle(x, y, 100, 100, 0x888888);
+            this.physics.add.existing(sprite, true);
+            const body = sprite.body as Phaser.Physics.Arcade.StaticBody;
+            body.setSize(64, 64); // Ensure the size matches the visual representation
+            body.setOffset(-32, -32); // Center the body
+
+            this.stations.push({ sprite, type, inUse: false});
+            this.physics.add.collider(this.player, sprite);
+            return;
+        }
+
         if (type === 'stove') {
             sprite = this.add.sprite(x, y, 'cooking_stations', 2).setScale(0.5);
             sprite.play('stove-burning');
             this.physics.add.existing(sprite, true);
-            (sprite.body as Phaser.Physics.Arcade.Body).setSize(100, 50);
-            (sprite.body as Phaser.Physics.Arcade.Body).offset.set(17, 60);
+            const body = sprite.body as Phaser.Physics.Arcade.Body;
+            body.setSize(100, 50).setOffset(17, 60); // Adjust stove hitbox size and offset
         } else if (type === 'cutting_board') {
             sprite = this.add.sprite(x, y, 'cooking_stations', 0).setScale(0.5);
             this.physics.add.existing(sprite, true);
-            (sprite.body as Phaser.Physics.Arcade.Body).setSize(100, 20);
-            (sprite.body as Phaser.Physics.Arcade.Body).offset.set(17, 80);
+            const body = sprite.body as Phaser.Physics.Arcade.Body;
+            body.setSize(100, 20).setOffset(17, 80); // Adjust cutting board hitbox size and offset
+        } else if (type === 'ingredient_shelf') {
+            sprite = this.add.sprite(x, y, 'crate').setScale(0.5);
+            this.physics.add.existing(sprite, true);
+            const body = sprite.body as Phaser.Physics.Arcade.StaticBody;
+            body.setSize(sprite.width * 0.5, sprite.height * 0.5);
+            // body.setOffset(-sprite.width / 2, -sprite.height / 2);
+
+            // Add ingredient preview
+            const preview = this.add.sprite(x, y - 20, 'ingredients', this.getIngredientFrame(ingredientType!, 'raw'))
+                .setScale(0.4)
+                .setDepth(sprite.depth + 1); // Ensure preview is on top
+
+            this.stations.push({ sprite, type, inUse: false, ingredientType, preview });
+            this.physics.add.collider(this.player, sprite);
+            return;
         } else {
-            sprite = this.add.rectangle(x, y, 64, 64, color);
+            sprite = this.add.rectangle(x, y, 64, 64, 0x888888);
             this.physics.add.existing(sprite, true);
         }
-
 
         const station: CookingStation = {
             sprite,
@@ -102,7 +179,6 @@ export class CookingMiniGame extends Scene {
             ingredientType
         };
 
-        // Only add progress bars for cooking/cutting stations
         if (type !== 'ingredient_shelf' && type !== 'garbage_bin') {
             station.progressBar = this.add.sprite(x, y - 80, 'progress_bar', 0)
                 .setOrigin(0.5, 0.5)
@@ -112,8 +188,6 @@ export class CookingMiniGame extends Scene {
         }
 
         this.stations.push(station);
-        
-        // Add collision with player
         this.physics.add.collider(this.player, sprite);
     }
 
@@ -121,65 +195,225 @@ export class CookingMiniGame extends Scene {
         const playerX = this.player.x;
         const playerY = this.player.y;
 
+        // Determine the direction the player is facing
+        const match = this.player.anims.currentAnim?.key.match(/(left|up|down)/)?.[0] ?? '';
+        const direction = match === 'left' ? this.player.flipX ? 'right' : 'left' : match;
+
+        // Define offsets for raycasting based on direction
+        const offsets = {
+            left: { x: -1, y: 0 },
+            right: { x: 1, y: 0 },
+            up: { x: 0, y: -1 },
+            down: { x: 0, y: 1 }
+        };
+
+        // Safeguard to ensure offset is defined
+        const offset = offsets[direction as keyof typeof offsets] || { x: 0, y: 1 };
+
+        let interactedWithStation = false;
+
         this.stations.forEach(station => {
-            const distance = Phaser.Math.Distance.Between(
-                playerX,
-                playerY,
-                station.sprite.x,
-                station.sprite.y
-            );
+            // Calculate the vector from the player to the station
+            const vectorX = station.sprite.x - playerX;
+            const vectorY = station.sprite.y - playerY;
 
-            if (distance < 120) {
-                if (station.type === 'ingredient_shelf') {
-                    if (!this.heldIngredient && !station.currentIngredient) {
-                        // Create new ingredient using spritesheet
-                        const ingredient = this.add.sprite(
-                            station.sprite.x,
-                            station.sprite.y,
-                            'ingredients',
-                            this.getIngredientFrame(station.ingredientType!, 'raw')
-                        ).setScale(0.5)
-                        .setOrigin(0.5, 0.5);
+            // Normalize the vector
+            const length = Math.sqrt(vectorX * vectorX + vectorY * vectorY);
+            const normalizedX = vectorX / length;
+            const normalizedY = vectorY / length;
 
-                        this.heldIngredient = {
-                            sprite: ingredient,
-                            type: station.ingredientType!, // Store the ingredient type
-                            state: 'raw'
-                        };
-                    }
-                } else if (station.type === 'garbage_bin') {
-                    if (this.heldIngredient) {
-                        // Remove the held ingredient
-                        this.heldIngredient.sprite.destroy();
-                        this.heldIngredient = undefined;
-                    }
-                } else {
-                    if (this.heldIngredient && !station.currentIngredient) {
-                        // Place ingredient on station
-                        this.heldIngredient.sprite.setVisible(true);
-                        station.currentIngredient = this.heldIngredient.sprite;
-                        station.ingredientType = this.heldIngredient.type; // Save the ingredient type to the station
-                        station.ingredientState = this.heldIngredient.state;
-                        station.currentIngredient.setPosition(station.sprite.x, station.sprite.y - 40);
-                        this.heldIngredient = undefined;
-                        
-                        if (station.ingredientState === 'raw') {
+            // Check if the station is in the direction the player is facing
+            const dotProduct = normalizedX * offset.x + normalizedY * offset.y;
+
+            // Define a threshold for interaction
+            const interactionThreshold = 0.8; // Adjust this value as needed
+
+            if (dotProduct > interactionThreshold) {
+                const distance = Phaser.Math.Distance.Between(
+                    playerX,
+                    playerY,
+                    station.sprite.x,
+                    station.sprite.y
+                );
+
+                // Calculate dynamic interaction distance based on the station's size
+                const interactionDistance = Math.max(station.sprite.displayWidth, station.sprite.displayHeight) * 0.5;
+
+                if (distance < interactionDistance) {
+                    interactedWithStation = true;
+                    if (station.type === 'ingredient_shelf') {
+                        if (!this.heldIngredient) {
+                            // Pick up a new ingredient from the shelf
+                            const ingredient = this.add.sprite(
+                                station.sprite.x,
+                                station.sprite.y - 40,
+                                'ingredients',
+                                this.getIngredientFrame(station.ingredientType!, 'raw')
+                            ).setScale(0.5);
+
+                            this.heldIngredient = {
+                                sprite: ingredient,
+                                type: station.ingredientType!,
+                                state: 'raw'
+                            };
+                        }
+                    } else if (station.type === 'garbage_bin') {
+                        if (this.heldIngredient && this.heldIngredient.type !== 'pot') {
+                            // Discard the held ingredient
+                            this.heldIngredient.sprite.destroy();
+                            this.heldIngredient = undefined;
+                        } else if (this.pot && this.pot.contents.length > 0) {
+                            // Empty the pot
+                            this.pot.contents = [];
+                            this.pot.sprite.clearTint();
+                        }
+                    } else if (station.type === 'stove') {
+                        if (this.pot && this.pot.isOnStove && !this.pot.isCooked) {
+                            // Cook the pot
+                            this.cookPot();
+                        } else if (this.heldIngredient && this.heldIngredient.type === 'pot') {
+                            // Place pot on stove
+                            this.pot!.isOnStove = true;
+                            this.pot?.sprite.setPosition(station.sprite.x, station.sprite.y - 40);
+                            this.pot?.sprite.setVisible(true); // Ensure the pot is visible
+                            this.physics.world.enable(this.pot!.sprite); // Re-enable the pot's hitbox
+                            this.heldIngredient = undefined;
+                            station.progress = 0;
                             station.inUse = true;
                             station.progressBar?.setVisible(true);
+                        } else if (this.heldIngredient && this.heldIngredient.type === 'salmon') {
+                            // Place salmon on stove
+                            station.currentIngredient = this.heldIngredient.sprite;
+                            station.ingredientType = this.heldIngredient.type;
+                            station.ingredientState = 'cooked';
+                            station.currentIngredient.setPosition(station.sprite.x, station.sprite.y - 40);
+                            station.currentIngredient.setDepth(station.sprite.depth + 1);
+                            this.heldIngredient = undefined;
+                            station.inUse = true;
+                            station.progressBar?.setVisible(true);
+                        } else if (!this.heldIngredient && this.pot && this.pot.isOnStove) {
+                            // Pick up the pot from the stove
+                            this.heldIngredient = {
+                                sprite: this.pot.sprite,
+                                type: 'pot',
+                                state: 'raw'
+                            };
+                            this.pot.isOnStove = false;
+                            this.physics.world.disable(this.pot.sprite); // Disable the pot's hitbox
+                            station.inUse = false;
+                            station.progressBar?.setVisible(false);
+                        } else if (!this.heldIngredient && station.currentIngredient) {
+                            // Pick up the cooked ingredient from the stove
+                            this.heldIngredient = {
+                                sprite: station.currentIngredient,
+                                type: station.ingredientType!,
+                                state: station.ingredientState!
+                            };
+                            station.currentIngredient = undefined;
+                            station.ingredientType = undefined;
+                            station.ingredientState = undefined;
+                            station.inUse = false;
+                            station.progressBar?.setVisible(false);
                         }
-                    } else if (!this.heldIngredient && station.currentIngredient) {
-                        // Pick up processed ingredient
-                        this.heldIngredient = {
-                            sprite: station.currentIngredient,
-                            type: station.ingredientType!,
-                            state: station.ingredientState!
-                        };
-                        station.currentIngredient = undefined;
-                        station.ingredientState = undefined;
+                    } else {
+                        if (this.heldIngredient && !station.currentIngredient) {
+                            // Place the held ingredient on the station
+                            this.heldIngredient.sprite.setVisible(true); // DO NOT REMOVE
+                            station.currentIngredient = this.heldIngredient.sprite;
+                            station.ingredientType = this.heldIngredient.type;
+                            station.ingredientState = this.heldIngredient.state;
+                            station.currentIngredient.setPosition(station.sprite.x, station.sprite.y - 40);
+                            station.currentIngredient.setDepth(station.sprite.depth + 1); // Ensure ingredient is on top
+                            this.heldIngredient = undefined;
+
+                            if (station.ingredientState === 'raw') {
+                                station.inUse = true;
+                                station.progressBar?.setVisible(true);
+                            }
+                        } else if (!this.heldIngredient && station.currentIngredient) {
+                            // Pick up the processed ingredient from the station
+                            station.progress = 0;
+                            station.inUse = false;
+                            station.progressBar?.setVisible(false);
+                            this.heldIngredient = {
+                                sprite: station.currentIngredient,
+                                type: station.ingredientType!,
+                                state: station.ingredientState!
+                            };
+                            station.currentIngredient = undefined;
+                            station.ingredientState = undefined;
+                        }
                     }
                 }
             }
         });
+
+        // Handle pot interaction
+        if (this.pot) {
+            const potDistance = Phaser.Math.Distance.Between(
+                playerX,
+                playerY,
+                this.pot.sprite.x,
+                this.pot.sprite.y
+            );
+
+            if (potDistance < 100) { // Adjust interaction distance as needed
+                if (this.heldIngredient && this.heldIngredient.type === 'pot') {
+                    // Place the pot down only if not interacting with a station
+                    if (!interactedWithStation) {
+                        this.pot.sprite.setPosition(playerX, playerY + 40); // Place the pot at the player's position
+                        this.physics.world.enable(this.pot.sprite); // Re-enable the pot's hitbox
+                        this.pot.sprite.setVisible(true); // Ensure the pot is visible
+                        this.heldIngredient = undefined;
+                    }
+                } else if (!this.heldIngredient) {
+                    // Pick up the pot
+                    this.heldIngredient = {
+                        sprite: this.pot.sprite,
+                        type: 'pot',
+                        state: 'raw'
+                    };
+                    this.physics.world.disable(this.pot.sprite); // Disable the pot's hitbox
+                } else if (this.heldIngredient && this.heldIngredient.type !== 'pot') {
+                    // Add ingredient to pot
+                    const existingIngredient = this.pot.contents.find(item => item.type === this.heldIngredient.type && item.state === this.heldIngredient.state);
+                    if (existingIngredient) {
+                        existingIngredient.quantity += 1;
+                    } else {
+                        this.pot.contents.push({
+                            type: this.heldIngredient.type,
+                            state: this.heldIngredient.state,
+                            quantity: 1
+                        });
+                    }
+                    this.heldIngredient.sprite.destroy();
+                    this.heldIngredient = undefined;
+                }
+            }
+        }
+    }
+
+    private cookPot() {
+        if (!this.pot) return;
+
+        const matchingRecipe = recipes.find(recipe => {
+            return recipe.ingredients.every(ingredient => {
+                const potIngredient = this.pot!.contents.find(item => item.type === ingredient.type && item.state === ingredient.state);
+                return potIngredient && potIngredient.quantity === ingredient.quantity;
+            });
+        });
+
+        if (matchingRecipe) {
+            // Successful recipe
+            this.pot.sprite.setTint(0x00ff00); // Tint green
+            this.pot.contents = [{ type: matchingRecipe.name, state: 'cooked', quantity: 1 }];
+        } else {
+            // Failed recipe
+            this.pot.sprite.setTint(0xff0000); // Tint red
+            this.pot.contents = [{ type: 'ash', state: 'ash', quantity: 1 }];
+        }
+
+        this.pot.isCooked = true;
     }
 
     update() {
@@ -193,7 +427,7 @@ export class CookingMiniGame extends Scene {
         if (this.cursors.left.isDown) {
             playerBody.setVelocityX(-speed);
             this.player.setFlipX(false);
-            if(this.heldIngredient) {
+            if (this.heldIngredient) {
                 this.player.play('walk-carry-left', true);
             } else {
                 this.player.play('walk-left', true);
@@ -201,7 +435,7 @@ export class CookingMiniGame extends Scene {
         } else if (this.cursors.right.isDown) {
             playerBody.setVelocityX(speed);
             this.player.setFlipX(true);
-            if(this.heldIngredient) {
+            if (this.heldIngredient) {
                 this.player.play('walk-carry-left', true);
             } else {
                 this.player.play('walk-left', true);
@@ -216,7 +450,7 @@ export class CookingMiniGame extends Scene {
         } else if (this.cursors.down.isDown) {
             playerBody.setVelocityY(speed);
             if (!this.cursors.left.isDown && !this.cursors.right.isDown) {
-                if(this.heldIngredient) {
+                if (this.heldIngredient) {
                     this.player.play('walk-carry-down', true);
                 } else {
                     this.player.play('walk-down', true);
@@ -231,14 +465,14 @@ export class CookingMiniGame extends Scene {
                 if (direction === 'up') {
                     this.player.play('idle-up', true);
                 } else {
-                    if(this.heldIngredient) {
+                    if (this.heldIngredient) {
                         this.player.play(`idle-carry-${direction}`, true);
                     } else {
                         this.player.play(`idle-${direction}`, true);
                     }
                 }
             } else {
-                if(this.heldIngredient) {
+                if (this.heldIngredient) {
                     this.player.play('idle-carry-down', true);
                 } else {
                     this.player.play('idle-down', true);
@@ -246,35 +480,33 @@ export class CookingMiniGame extends Scene {
             }
         }
 
+        // Update held ingredient position smoothly
+        if (this.heldIngredient) {
+            const offsetX = this.player.anims.currentAnim?.key === 'walk-carry-down' || this.player.anims.currentAnim?.key === 'idle-carry-down' ? 0 : this.player.flipX ? 40 : -40; // Center horizontally
+            const offsetY = 30; // Adjust vertically to keep it consistent
+            this.heldIngredient.sprite.setPosition(this.player.x + offsetX, this.player.y + offsetY);
+            this.heldIngredient.sprite.setDepth(20);
+        }
+
+        if (this.player.anims.currentAnim?.key === 'walk-up' || this.player.anims.currentAnim?.key === 'idle-up') {
+            this.heldIngredient?.sprite.setVisible(false);
+        } else {
+            this.heldIngredient?.sprite.setVisible(true);
+        }
+
         // Simple depth sorting
         this.stations.forEach(station => {
-            if (station.type === 'stove' || station.type === 'cutting_board') {
+            if (station.type === 'stove' || station.type === 'cutting_board' || station.type === 'ingredient_shelf') {
                 const stationDepth = this.player.y > station.sprite.y ? 5 : 15;
                 station.sprite.setDepth(stationDepth);
                 if (station.currentIngredient) {
                     station.currentIngredient.setDepth(stationDepth + 1);
                 }
+                if (station.preview) {
+                    station.preview.setDepth(stationDepth + 1);
+                }
             }
         });
-
-        // Held ingredient always on top
-        if (this.heldIngredient) {
-            this.heldIngredient.sprite.setDepth(20);
-            this.heldIngredient.sprite.setPosition(
-                ((this.player.anims.currentAnim?.key === 'walk-carry-left' || this.player.anims.currentAnim?.key === 'idle-carry-left') && !this.player.flipX) ? 
-                    this.player.x - 40 
-                    : (this.player.anims.currentAnim?.key === 'walk-carry-left' || this.player.anims.currentAnim?.key === 'idle-carry-left') && this.player.flipX ? 
-                        this.player.x + 40 
-                        : this.player.x,
-                this.player.y + 30
-            );
-        }
-
-        if(this.player.anims.currentAnim?.key === 'walk-up' || this.player.anims.currentAnim?.key === 'idle-up') {
-            this.heldIngredient?.sprite.setVisible(false);
-        } else {
-            this.heldIngredient?.sprite.setVisible(true);
-        }
 
         // Continuously update progress for stations
         this.stations.forEach(station => {
@@ -297,28 +529,44 @@ export class CookingMiniGame extends Scene {
 
         // Only update progress if the player is close enough
         if (distance <= 120 || station.type !== 'cutting_board') {
+            const frameNumber = Math.floor((station.progress || 0) / 14.3);
             station.progress = (station.progress || 0) + 0.12; // Adjust the increment for smoother progress
             
             if (station.progressBar) {
-                station.progressBar.setFrame(Math.floor((station.progress || 0) / 14.3));
+                // Update progress bar frame
+                station.progressBar.setFrame(frameNumber > 7 ? 7 : frameNumber);
+
+                // Make progress bar blink red if progress is over 125
+                if (station.progress > 125) {
+                    const isRed = Math.floor(station.progress / 10) % 2 === 0;
+                    station.progressBar.setTint(isRed ? 0xff0000 : 0xffffff);
+                } else {
+                    station.progressBar.clearTint();
+                }
             }
 
             if (station.progress >= 100) {
-                station.inUse = false;
-                station.progress = 0;
-                station.progressBar?.setVisible(false);
-                
                 // Update ingredient state based on station type
                 if (station.currentIngredient) {
-                    station.ingredientState = station.type === 'stove' ? 'cooked' : 'chopped';
-                    const newFrame = this.getIngredientFrame(station.ingredientType!, station.ingredientState);
-                    station.currentIngredient.setFrame(newFrame);
+                    const shouldNotCookAlone = ['carrot', 'tomato', 'onion', 'potato', 'rice', 'dough'];
+                    const isOvercooked = station.progress >= 150; // Burn threshold
+
+                    if (station.type === 'stove' && (shouldNotCookAlone.includes(station.ingredientType!) || isOvercooked)) {
+                        // Turn to ash
+                        station.ingredientState = 'ash';
+                        station.currentIngredient.setFrame(0); // Default to the first frame
+                        station.currentIngredient.setTint(0x000000); // Apply black tint
+                    } else if (station.progress < 150) {
+                        station.ingredientState = station.type === 'stove' ? 'cooked' : 'chopped';
+                        const newFrame = this.getIngredientFrame(station.ingredientType!, station.ingredientState);
+                        station.currentIngredient.setFrame(newFrame);
+                    }
                 }
             }
         }
     }
 
-    private getIngredientFrame(type: string, state: 'raw' | 'chopped' | 'cooked'): number {
+    private getIngredientFrame(type: string, state: IngredientState): number {
         const ingredients = ['onion', 'tomato', 'carrot', 'potato', 'salmon'];
         const baseIndex = ingredients.indexOf(type);
         

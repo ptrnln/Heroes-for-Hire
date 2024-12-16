@@ -37,7 +37,11 @@ const config: Phaser.Types.Core.GameConfig = {
         arcade: {
             debug: false
         }
-    }
+    },
+    render: {
+        pixelArt: true
+    },
+    
 };
 
 const StartGame = (parent: string) => {

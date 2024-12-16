@@ -39,6 +39,7 @@ export class Preloader extends Scene
             fontSize: '24px',
             color: '#ffffff'
         }).setOrigin(0.5);
+
         this.load.font('DePixel-bold', 'fonts/depixelhalbfett-webfont.woff', 'woff');
         
         // Add any other assets that MainMenu needs
@@ -91,6 +92,12 @@ export class Preloader extends Scene
             frameWidth: 432,
             frameHeight: 432
         });
+
+        this.load.image('wood_floor', 'wood_floor.png');
+
+        this.load.image('crate', 'crate.png');
+
+        this.load.image('pot', 'pot.png');
 
         // Listen for the complete event
         this.load.on('complete', () => {
@@ -181,7 +188,6 @@ export class Preloader extends Scene
             repeat: -1
         });
 
-        // Create stove animation
         this.anims.create({
             key: 'stove-burning',
             frames: this.anims.generateFrameNumbers('cooking_stations', { start: 2, end: 3 }),
