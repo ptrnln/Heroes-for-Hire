@@ -36,7 +36,7 @@ export default class Overworld extends Scene {
         
 
         // Create player sprite instead of rectangle
-        this.player = this.add.sprite(100, 100, 'player-down')
+        this.player = this.add.sprite(100, 100, 'player-walking-down')
             .setScale(0.5);
         this.physics.add.existing(this.player);
         

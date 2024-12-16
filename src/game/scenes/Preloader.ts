@@ -48,17 +48,44 @@ export class Preloader extends Scene
         this.load.image('logo', 'logo.png');      // Reload to ensure it's available
 
         // Load character spritesheets with correct dimensions
-        this.load.spritesheet('player-down', 'Protag1_FighterWalkingDown.png', {
+        this.load.spritesheet('player-walking-down', 'Protag1_FighterWalkingDown.png', {
             frameWidth: 261,
             frameHeight: 540
         });
-        this.load.spritesheet('player-left', 'Protag1_FighterWalkingLeft.png', {
+        this.load.spritesheet('player-walking-left', 'Protag1_FighterWalkingLeft.png', {
             frameWidth: 270,
             frameHeight: 540
         });
-        this.load.spritesheet('player-up', 'Protag1_FighterWalkingUp.png', {
+        this.load.spritesheet('player-walking-up', 'Protag1_FighterWalkingUp.png', {
             frameWidth: 261,
             frameHeight: 540
+        });
+
+        this.load.spritesheet('player-carrying-down', 'Protag1_FighterCarryingDown.png', {
+            frameWidth: 261,
+            frameHeight: 540
+        });
+
+        this.load.spritesheet('player-carrying-left', 'Protag1_FighterCarryingLeft.png', {
+            frameWidth: 261,
+            frameHeight: 540
+        });
+
+        // this.load.spritesheet('player-carrying-up', 'Protag1_FighterCarryingUp.png', {
+        //     frameWidth: 261,
+        //     frameHeight: 540
+        // });
+
+        // Load ingredient spritesheet
+        this.load.spritesheet('ingredients', 'ingredients.png', {
+            frameWidth: 135,
+            frameHeight: 135
+        });
+
+        // Load progress bar spritesheet
+        this.load.spritesheet('progress_bar', 'progress_bar.png', {
+            frameWidth: 180,
+            frameHeight: 45
         });
 
         // Listen for the complete event
@@ -73,39 +100,78 @@ export class Preloader extends Scene
         // Create the animations
         this.anims.create({
             key: 'idle-down',
-            frames: [{ key: 'player-down', frame: 0 }],
+            frames: [{ key: 'player-walking-down', frame: 0 }],
             frameRate: 10
         });
 
         this.anims.create({
             key: 'walk-down',
-            frames: this.anims.generateFrameNumbers('player-down', { start: 0, end: 3 }),
+            frames: this.anims.generateFrameNumbers('player-walking-down', { start: 0, end: 3 }),
             frameRate: 10,
             repeat: -1
         });
 
         this.anims.create({
             key: 'idle-up',
-            frames: [{ key: 'player-up', frame: 0 }],
+            frames: [{ key: 'player-walking-up', frame: 0 }],
             frameRate: 10
         });
 
         this.anims.create({
             key: 'walk-up',
-            frames: this.anims.generateFrameNumbers('player-up', { start: 0, end: 3 }),
+            frames: this.anims.generateFrameNumbers('player-walking-up', { start: 0, end: 3 }),
             frameRate: 10,
             repeat: -1
         });
 
         this.anims.create({
             key: 'idle-left',
-            frames: [{ key: 'player-left', frame: 0 }],
+            frames: [{ key: 'player-walking-left', frame: 0 }],
             frameRate: 10
         });
 
         this.anims.create({
             key: 'walk-left',
-            frames: this.anims.generateFrameNumbers('player-left', { start: 0, end: 3 }),
+            frames: this.anims.generateFrameNumbers('player-walking-left', { start: 0, end: 3 }),
+            frameRate: 10,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'idle-carrying-down',
+            frames: [{ key: 'player-carrying-down', frame: 0 }],
+            frameRate: 10
+        });
+
+        this.anims.create({
+            key: 'idle-carrying-left',
+            frames: [{ key: 'player-carrying-left', frame: 0 }],
+            frameRate: 10
+        });
+
+        // this.anims.create({
+        //     key: 'idle-carrying-up',
+        //     frames: [{ key: 'player-carrying-up', frame: 0 }],
+        //     frameRate: 10
+        // });
+
+        // this.anims.create({
+        //     key: 'walk-carrying-up',
+        //     frames: this.anims.generateFrameNumbers('player-carrying-up', { start: 0, end: 3 }),
+        //     frameRate: 10,
+        //     repeat: -1
+        // });
+
+        this.anims.create({
+            key: 'walk-carrying-left',
+            frames: this.anims.generateFrameNumbers('player-carrying-left', { start: 0, end: 3 }),
+            frameRate: 10,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'walk-carrying-down',
+            frames: this.anims.generateFrameNumbers('player-carrying-down', { start: 0, end: 3 }),
             frameRate: 10,
             repeat: -1
         });

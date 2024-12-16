@@ -7,6 +7,7 @@ import { Preloader } from './scenes/Preloader';
 import { SaveMenu } from './scenes/SaveMenu';
 import { OpeningScene } from './scenes/OpeningScene';
 import Overworld from './scenes/Overworld';
+import { CookingMiniGame } from './scenes/CookingMiniGame';
 
 //  Find out more information about the Game Config at:
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
@@ -24,7 +25,8 @@ const config: Phaser.Types.Core.GameConfig = {
         GameOver,
         SaveMenu,
         OpeningScene,
-        Overworld
+        Overworld,
+        CookingMiniGame
     ],
     dom: {
         createContainer: true
