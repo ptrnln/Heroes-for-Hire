@@ -36,10 +36,6 @@ function App()
     const user = useUser();
     const { openAuthModal, closeAuthModal, isOpen } = useAuthModal();
     const stateIsOpen = useSelector((state: any) => state.ui.authModalOpen)
-    // const stateUser = useSelector((state: any) => state.session.user);
-    // const { authenticate, authenticateAsync, isPending, error } = useAuthenticate({
-    //     onSuccess: undefined
-    // })
     const signerStatus = useSignerStatus();
     const { logout } = useLogout();
 

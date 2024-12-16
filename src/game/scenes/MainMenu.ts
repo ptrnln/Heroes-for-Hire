@@ -38,11 +38,13 @@ export class MainMenu extends Scene
             stroke: '#000000', strokeThickness: 5,
             align: 'center'
         }, {
-            "pointerdown": (
+            "pointerdown": async(
                 _pointer: any, _localX: number,  _localY: number, _event: Event 
             ) => {
-                if(!globalThis.sessionUser) return globalThis.dispatch(uiActions.openAuthModalThunk());
-                
+                if(!globalThis.sessionUser)  {
+                    await globalThis.dispatch(uiActions.openAuthModalThunk());
+                    return;
+                }
                 this.changeScene('Overworld')
             },
             "pointerover": (
@@ -57,12 +59,13 @@ export class MainMenu extends Scene
             stroke: '#000000', strokeThickness: 5,
             align: 'center'
         }, {
-            "pointerdown": (
+            "pointerdown": async (
                 _pointer: any, _localX: number, _localY: number, _event: Event
             ) => {
-                if(!globalThis.sessionUser) globalThis.dispatch(uiActions.openAuthModalThunk()).then(() => {
-                    this.changeScene('SaveMenu');
-                });
+                if(!globalThis.sessionUser)  {
+                    await globalThis.dispatch(uiActions.openAuthModalThunk());
+                    return;
+                };
                 this.changeScene('SaveMenu');
             }
         })
