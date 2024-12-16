@@ -17,7 +17,7 @@ export class SaveMenu extends Scene {
         super('SaveMenu');
     }
 
-    create() {
+    async create() {
         try {
             const container = document.createElement('div');
             const ul = document.createElement('ul');
@@ -36,31 +36,24 @@ export class SaveMenu extends Scene {
                 justify-content: center;
                 width: 100%;`);
 
-            this.getSaves().then((data) => {
-                data.forEach((_save, i) => {
-                    const saveElement = document.createElement('li');
-                    const text = `Save-${++i}`
-                    saveElement.innerText = text
-                    saveElement.className = 'pr-20px'
+            const saves = await this.getSaves()
 
-                    saveElement.style.fontSize = '20px'
-                    saveElement.style.padding = '10px'
-                    saveElement.style.border = '1px solid #000000'
-                    saveElement.style.borderRadius = '10px'
-                    saveElement.style.backgroundColor = '#ffffff'
-                    saveElement.style.color = '#000000'
-                    saveElement.style.cursor = 'pointer'
-                    saveElement.style.userSelect = 'none'
-                    saveElement.onpointerdown = (_e) => {
-                        this.changeScene(_save.player_data.scene_key);
-                    }
-                    ul.appendChild(saveElement);
-                });
-            }).finally(() => {
-                EventBus.emit('current-scene-ready', this);
+            saves.forEach((_save, i) => {
+                const saveElement = document.createElement('li');
+                const text = `Save-${++i}`
+                saveElement.innerText = text
+                saveElement.className = 'pr-20px'
+
+                saveElement.onpointerdown = (_e) => {
+                    this.changeScene(_save.player_data.scene_key);
+                }
+                ul.appendChild(saveElement);
+
             });
-        }
-        catch(err) {
+            // }).finally(() => {
+                EventBus.emit('current-scene-ready', this);
+            // });
+        } catch(err) {
             console.error(err);
         }
     }
@@ -73,9 +66,8 @@ export class SaveMenu extends Scene {
     private async getSaves() {
         const user= getUser(accountKitConfig);
 
-        
+        const now = Math.floor(Date.now() / 1000);
 
-        const now = Date.now() / 1000
 
         const token = sign({ payload: {
             sub: user?.userId,
