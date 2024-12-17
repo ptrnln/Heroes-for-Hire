@@ -1,6 +1,8 @@
 import { GameObjects, Scene } from "phaser";
 import { EventBus } from "../EventBus";
 import { recipes } from "./Recipes";
+import { GameRewardService } from "../../services/GameRewardService";
+
 type StationType = 'stove' | 'cutting_board' | 'ingredient_shelf' | 'garbage_bin';
 type IngredientState = 'raw' | 'chopped' | 'cooked' | 'ash';
 
@@ -42,6 +44,7 @@ export class CookingMiniGame extends Scene {
     }
 
     create() {
+        // this.handleWin();
         // Create a larger background (150% of canvas size)
         this.add.tileSprite(0, 0, 3072, 2304, 'wood_floor')
             .setOrigin(0, 0)
@@ -453,7 +456,8 @@ export class CookingMiniGame extends Scene {
             // Successful recipe
             this.pot.sprite.setTint(0x00ff00); // Tint green
             this.pot.contents = [{ type: matchingRecipe.name, state: 'cooked', quantity: 1 }];
-            this.scene.start('CookingMiniGameWinScreen');
+            // this.scene.start('CookingMiniGameWinScreen');
+            this.handleWin();
         } else {
             // Failed recipe
             this.pot.sprite.setTint(0xff0000); // Tint red
@@ -642,5 +646,43 @@ export class CookingMiniGame extends Scene {
         // Raw ingredients are frames 0-4
         // Chopped ingredients are frames 5-9 in same order
         return state === 'chopped' ? baseIndex + 11 : state === 'cooked' ? baseIndex + 22 : baseIndex;
+    }
+
+    async handleWin() {
+        try {
+            // Show loading UI
+            const loadingText = this.add.text(512, 384, 'Claiming reward...', {
+                fontFamily: 'DePixel-bold',
+                fontSize: 24,
+                color: '#ffffff'
+            }).setOrigin(0.5);
+
+            // Try to claim treasure chest
+            const success = await GameRewardService.claimTreasureChest();
+
+            if (success) {
+                // Show success message
+                loadingText.setText('Reward claimed!');
+                
+                // Wait 2 seconds then return to overworld
+                this.time.delayedCall(2000, () => {
+                    this.scene.start('Overworld');
+                });
+            } else {
+                loadingText.setText('Failed to claim reward.\nDo you own a Shapecraft Key?');
+                
+                // Add retry button (store reference only if needed)
+                this.add.text(512, 450, 'Retry', {
+                    fontFamily: 'DePixel-bold',
+                    fontSize: 20,
+                    color: '#ffffff'
+                })
+                .setOrigin(0.5)
+                .setInteractive()
+                .on('pointerdown', () => this.handleWin());
+            }
+        } catch (error) {
+            console.error("Error in handleWin:", error);
+        }
     }
 }

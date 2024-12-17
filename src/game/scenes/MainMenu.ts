@@ -44,7 +44,7 @@ export class MainMenu extends Scene
                     await globalThis.dispatch(uiActions.openAuthModalThunk());
                     return;
                 }
-                this.changeScene('Overworld')
+                this.changeScene('CookingMiniGame');
             },
             "pointerover": (
                 _pointer: any, _localX: number, _localY: number, _event: Event
