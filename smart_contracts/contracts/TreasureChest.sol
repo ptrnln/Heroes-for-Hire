@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./ConsumableFactory.sol";
+import "./consumableFactory.sol";
 import "./interfaces/IShapecraft.sol";
 
 contract TreasureChest is Ownable {

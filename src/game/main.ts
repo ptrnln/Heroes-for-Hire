@@ -7,7 +7,9 @@ import { Preloader } from './scenes/Preloader';
 import { SaveMenu } from './scenes/SaveMenu';
 import { OpeningScene } from './scenes/OpeningScene';
 import Overworld from './scenes/Overworld';
-
+import { CookingMiniGame } from './scenes/CookingMiniGame';
+import { PauseMenu } from './scenes/PauseMenu';
+import { CookingMiniGameWinScreen } from './scenes/CookingMiniGameWinScreen';
 //  Find out more information about the Game Config at:
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
 const config: Phaser.Types.Core.GameConfig = {
@@ -24,7 +26,10 @@ const config: Phaser.Types.Core.GameConfig = {
         GameOver,
         SaveMenu,
         OpeningScene,
-        Overworld
+        Overworld,
+        CookingMiniGame,
+        PauseMenu,
+        CookingMiniGameWinScreen
     ],
     dom: {
         createContainer: true
@@ -34,7 +39,11 @@ const config: Phaser.Types.Core.GameConfig = {
         arcade: {
             debug: false
         }
-    }
+    },
+    render: {
+        pixelArt: true
+    },
+    
 };
 
 const StartGame = (parent: string) => {
