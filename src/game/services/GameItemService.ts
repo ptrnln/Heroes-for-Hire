@@ -1,3 +1,5 @@
+import { ConsumableFactoryAddress } from "../../abi/ConsumableFactory";
+
 export enum ItemType {
     CONSUMABLE = 'CONSUMABLE',
     EQUIPMENT = 'EQUIPMENT'
@@ -86,7 +88,7 @@ export const GAME_ITEMS: { [key: number]: GameItem } = {
 };
 
 export class GameItemService {
-    private static CONSUMABLE_FACTORY = "YOUR_DEPLOYED_CONTRACT";
+    private static CONSUMABLE_FACTORY = ConsumableFactoryAddress;
     
     static async getPlayerItems(address: string): Promise<GameItem[]> {
         // TODO: Implement contract query
