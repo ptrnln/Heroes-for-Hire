@@ -8,13 +8,13 @@ export class PauseMenu extends Scene {
 
     create() {
         // Add a semi-transparent background
-        this.add.rectangle(400, 300, 800, 600, 0x000000, 0.5);
+        this.add.rectangle(1024 / 2, 768 / 2, 1024, 768, 0x000000, 0.5);
 
         // Add a "Paused" text
         this.add.text(400, 150, 'Paused', { fontSize: '48px', color: '#ffffff' }).setOrigin(0.5);
 
         // Add a "Resume" button
-        const resumeButton = this.add.text(400, 250, 'Resume', { fontSize: '32px', color: '#ffffff' })
+        const resumeButton = this.add.text(1024 / 2, 250, 'Resume', { fontSize: '32px', color: '#ffffff' })
             .setOrigin(0.5)
             .setInteractive();
 
@@ -24,7 +24,7 @@ export class PauseMenu extends Scene {
         });
 
         // Add a "Quit" button
-        const quitButton = this.add.text(400, 350, 'Quit', { fontSize: '32px', color: '#ffffff' })
+        const quitButton = this.add.text(1024 / 2, 350, 'Quit', { fontSize: '32px', color: '#ffffff' })
             .setOrigin(0.5)
             .setInteractive();
 
@@ -34,7 +34,7 @@ export class PauseMenu extends Scene {
         });
 
         // Add a "Recipes" button
-        const recipesButton = this.add.text(400, 450, 'Recipes', { fontSize: '32px', color: '#ffffff' })
+        const recipesButton = this.add.text(1024 / 2, 450, 'Recipes', { fontSize: '32px', color: '#ffffff' })
             .setOrigin(0.5)
             .setInteractive();
 
@@ -48,22 +48,22 @@ export class PauseMenu extends Scene {
         this.children.removeAll();
 
         // Add a semi-transparent background
-        this.add.rectangle(400, 300, 800, 600, 0x000000, 0.5);
+        this.add.rectangle(1024 / 2, 768 / 2, 1024, 768, 0x000000, 0.5);
 
         // Add a "Recipes" text
-        this.add.text(400, 100, 'Recipes', { fontSize: '48px', color: '#ffffff' }).setOrigin(0.5);
+        this.add.text(1024 / 2, 100, 'Recipes', { fontSize: '48px', color: '#ffffff' }).setOrigin(0.5);
 
         // Display each recipe
         recipes.forEach((recipe, index) => {
-            this.add.text(400, 200 + index * 100, recipe.name, { fontSize: '32px', color: '#ffffff' }).setOrigin(0.5);
+            this.add.text(1024 / 2, 200 + index * 100, recipe.name, { fontSize: '32px', color: '#ffffff' }).setOrigin(0.5);
 
             recipe.ingredients.forEach((ingredient, i) => {
-                this.add.text(400, 240 + index * 100 + i * 20, `${ingredient.quantity}x ${ingredient.state} ${ingredient.type}`, { fontSize: '24px', color: '#ffffff' }).setOrigin(0.5);
+                this.add.text(1024 / 2, 240 + index * 100 + i * 20, `${ingredient.quantity}x ${ingredient.state} ${ingredient.type}`, { fontSize: '24px', color: '#ffffff' }).setOrigin(0.5);
             });
         });
 
         // Add a "Back" button
-        const backButton = this.add.text(400, 550, 'Back', { fontSize: '32px', color: '#ffffff' })
+        const backButton = this.add.text(1024 / 2, 550, 'Back', { fontSize: '32px', color: '#ffffff' })
             .setOrigin(0.5)
             .setInteractive();
 

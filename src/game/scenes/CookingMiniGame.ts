@@ -69,7 +69,7 @@ export class CookingMiniGame extends Scene {
         this.player.setDepth(10); // Higher base depth for player
 
         // Create ingredient stations at bottom left with more spacing
-        const ingredients = ['onion', 'tomato', 'carrot', 'potato', 'salmon'];
+        const ingredients = ['onion', 'tomato', 'carrot', 'potato', 'salmon', 'ham', 'beef', 'rice', 'dough'];
         const startX = 200;  
         const startY = 1000;
         const spacing = 200;  
@@ -453,6 +453,7 @@ export class CookingMiniGame extends Scene {
             // Successful recipe
             this.pot.sprite.setTint(0x00ff00); // Tint green
             this.pot.contents = [{ type: matchingRecipe.name, state: 'cooked', quantity: 1 }];
+            this.scene.start('CookingMiniGameWinScreen');
         } else {
             // Failed recipe
             this.pot.sprite.setTint(0xff0000); // Tint red
@@ -609,7 +610,6 @@ export class CookingMiniGame extends Scene {
                         const isOvercooked = station.progress >= 150; // Burn threshold
 
                         if (shouldNotCookAlone.includes(station.ingredientType!) || isOvercooked || station.ingredientStateAtStart !== 'chopped') {
-                            debugger
                             // Turn to ash
                             station.ingredientState = 'ash';
                             station.currentIngredient.setFrame(this.getIngredientFrame(station.ingredientType!, station.ingredientState));
@@ -619,6 +619,14 @@ export class CookingMiniGame extends Scene {
                             station.currentIngredient.setFrame(newFrame);
                         }
                     }
+                }
+
+                // Trigger cookPot if the pot is on the stove and progress reaches 100
+                if (station.type === 'stove' && this.pot && this.pot.isOnStove && !this.pot.isCooked) {
+                    this.cookPot();
+                    station.progress = 0; // Reset progress after cooking
+                    station.inUse = false;
+                    station.progressBar?.setVisible(false); // Hide progress bar
                 }
             }
         }
